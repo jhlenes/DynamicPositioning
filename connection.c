@@ -1,23 +1,16 @@
 /*
- ============================================================================
- Name        : connection.c
- Author      : Jan Henrik Lenes
- Description : Establish a connection to phidgets
- ============================================================================
+ *
+ *	Implements functions for connecting to phidgets,
+ *	and closing existing connections.
+ *
  */
 
-#include <stdio.h>
-#include <phidget21.h>
-
-#define SENSOR_INDEX 1
-#define CHANGE_TRIGGER 1
+#include "headers/connection.h"
 
 CPhidgetInterfaceKitHandle kitHandle = 0;	// Declare an InterfaceKit handle
 CPhidgetServoHandle servoHandle = 0;		// Declare a servo handle
 
 /*
- * Function:  AttachHandler
- * --------------------
  * Is called whenever a phidget is attached. Prints name and serial number to the console.
  *
  *  handle: a reference to the device
@@ -39,8 +32,6 @@ int CCONV AttachHandler(CPhidgetHandle handle, void *userPtr)
 }
 
 /*
- * Function:  DetachHandler
- * --------------------
  * Is called whenever a phidget is detached. Prints name and serial number to the console.
  *
  *  handle: a reference to the device
@@ -62,8 +53,6 @@ int CCONV DetachHandler(CPhidgetHandle handle, void *userPtr)
 }
 
 /*
- * Function:  ErrorHandler
- * --------------------
  * Is called whenever a phidget generates an error. Prints name and serial number to the console.
  *
  *  handle: a reference to the device
@@ -78,36 +67,12 @@ int CCONV ErrorHandler(CPhidgetHandle handle, void *userPtr, int ErrorCode, cons
 }
 
 /*
- * Function:  SensorChangeHandler
- * --------------------
- * Is called whenever a sensor value changes more than the change trigger.
- *
- *  handle: a reference to the device
- *  userPtr:
- *  index: the sensor index
- *  sensorValue: a sensor value 0-1000
- *
- *  returns: 0
- */
-int CCONV SensorChangeHandler(CPhidgetHandle handle, void *userPtr, int index, int sensorValue)
-{
-	// TODO: Do regulation
-
-	printf("New value %d from sensor at location %d\n", sensorValue, index);
-
-
-	return 0;
-}
-
-/*
- * Function:  setupInterfaceKitHandle
- * --------------------
  *	Create an interface kit object, set up event handlers and open the phidget.
  *
  *  returns: 	0 if successful
  *  			1 if failed
  */
-int setupInterfaceKitConnection()
+int setup_interface_kit_connection()
 {
 
 	// Create the InterfaceKit object
@@ -118,13 +83,6 @@ int setupInterfaceKitConnection()
 	CPhidget_set_OnAttach_Handler((CPhidgetHandle) kitHandle, AttachHandler, NULL);
 	CPhidget_set_OnDetach_Handler((CPhidgetHandle) kitHandle, DetachHandler, NULL);
 	CPhidget_set_OnError_Handler((CPhidgetHandle) kitHandle, ErrorHandler, NULL);
-
-	// Registers a callback that will run if the sensor value changes by more than the sensor change trigger.
-	CPhidgetInterfaceKit_set_OnSensorChange_Handler(kitHandle, SensorChangeHandler, NULL);
-
-	// Set the sensor change trigger
-	CPhidgetInterfaceKit_setSensorChangeTrigger(kitHandle, SENSOR_INDEX,
-	CHANGE_TRIGGER);
 
 	// Open the interfacekit for device connections, -1 opens any.
 	CPhidget_open((CPhidgetHandle) kitHandle, -1);
@@ -143,14 +101,12 @@ int setupInterfaceKitConnection()
 }
 
 /*
- * Function:  setupServoMotorHandle
- * --------------------
  *	Create an servo motor object, set up event handlers and open the phidget.
  *
  *  returns: 	0 if successful
  *  			1 if failed
  */
-int setupServoMotorConnection()
+int setup_servo_motor_connection()
 {
 	// Create the servo object
 	CPhidgetServo_create(&servoHandle);
@@ -177,8 +133,17 @@ int setupServoMotorConnection()
 	return 0;
 }
 
+int connect_phidgets(void)
+{
+	// Setup a connection to the phidgets we are going to use
+	if (setup_interface_kit_connection())
+		return 1;
+	if (setup_servo_motor_connection())
+		return 1;
+	return 0;
+}
 
-int closeConnections()
+int close_connections(void)
 {
 	CPhidget_close((CPhidgetHandle) kitHandle);
 	CPhidget_delete((CPhidgetHandle) kitHandle);
@@ -186,30 +151,6 @@ int closeConnections()
 	CPhidget_close((CPhidgetHandle) servoHandle);
 	CPhidget_delete((CPhidgetHandle) servoHandle);
 
-	return 0;
-}
-
-int main()
-{
-	// Setup a connection to the phidgets we are going to use
-	if (setupInterfaceKitConnection())
-		return 1;
-	if (setupServoMotorConnection())
-		return 1;
-
-	// Read interface kit event data
-	printf("Reading...\n");
-
-	// Keep displaying interface kit data until user input is read
-	printf("Press any key to go to exit\n");
-	getchar();
-
-	// Since user input has been read, this is a signal to terminate the program so we will close the phidget
-	// and delete the object we created
-	printf("Closing...\n");
-	closeConnections();
-
-	// All done, exit
 	return 0;
 }
 

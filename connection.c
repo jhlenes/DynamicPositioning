@@ -5,7 +5,9 @@
  *
  */
 
+#include <phidget21.h>
 #include "headers/connection.h"
+#include "headers/responsive_analog_read.h"
 
 CPhidgetInterfaceKitHandle kitHandle = 0;	// Declare an InterfaceKit handle
 CPhidgetServoHandle servoHandle = 0;		// Declare a servo handle
@@ -140,6 +142,31 @@ int connect_phidgets(void)
 		return 1;
 	if (setup_servo_motor_connection())
 		return 1;
+	return 0;
+}
+
+int get_sensor_value(void)
+{
+	// TODO: Learn pointers
+
+	int sensorValue;
+	CPhidgetInterfaceKit_getSensorValue(kitHandle, 0, &sensorValue);
+
+	// reduce noise
+	sensorValue = responsive_analog_read(sensorValue);
+	return sensorValue;
+}
+
+int get_servo_min_max(double *min, double *max)
+{
+	CPhidgetServo_getPositionMin(servoHandle, 0, min);
+	CPhidgetServo_getPositionMax(servoHandle, 0, max);
+	return 0;
+}
+
+int set_servo_position(double position)
+{
+	CPhidgetServo_setPosition(servoHandle, 0, position);
 	return 0;
 }
 

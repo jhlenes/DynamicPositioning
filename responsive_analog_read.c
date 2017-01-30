@@ -8,7 +8,7 @@
 
 #include <stdlib.h>	// Function: abs()
 
-const int ANALOG_RESOLUTION = 1024;
+const int ANALOG_RESOLUTION = 1001;
 
 // value between 0 and 1 that controls how smooth the output is
 const float SNAP_MULTIPLIER = 0.007;

@@ -7,8 +7,8 @@
  *
  */
 
-#include <time.h>
 #include "headers/pid_controller.h"
+#include "headers/my_utils.h"
 
 // PID constants
 float Kp, Ki, Kd;
@@ -16,7 +16,6 @@ float Kp, Ki, Kd;
 float lastInput = 0.0;
 float integralTerm = 0.0;
 
-struct timespec timeSpec;	// Used to get current time
 unsigned long lastTime = 0;
 
 // Restrictions on the output
@@ -71,20 +70,11 @@ void set_pid_parameters(float P, float I, float D)
 	Kd = D;
 }
 
-void set_output_limits(float min, double max)
+void set_pid_output_limits(float min, float max)
 {
 	if (min > max)
 		return;
 	outMin = min;
 	outMax = max;
-}
-
-/*
- * Returns current time in milliseconds
- */
-unsigned long millis(void)
-{
-	clock_gettime(CLOCK_MONOTONIC, &timeSpec);
-	return (unsigned long) (timeSpec.tv_sec * 1000 + timeSpec.tv_nsec / 1000000);
 }
 

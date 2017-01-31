@@ -8,13 +8,10 @@
 
 #include <stdlib.h>	// Function: abs()
 
-const int ANALOG_RESOLUTION = 1001;
+static const int ANALOG_RESOLUTION = 1001;
 
 // value between 0 and 1 that controls how smooth the output is
-const float SNAP_MULTIPLIER = 0.007;
-
-// the output value
-float smoothValue = 0;
+static const float SNAP_MULTIPLIER = 0.007;
 
 /*
  * Calculates a number between 0 and 1 that determines how
@@ -34,6 +31,8 @@ float snap_curve(float x)
  */
 int responsive_analog_read(int newValue)
 {
+	// the output value, initialized once to 0
+	static float smoothValue = 0;
 
 	// get difference between new input value and current smooth value
 	unsigned int diff = abs(newValue - smoothValue);

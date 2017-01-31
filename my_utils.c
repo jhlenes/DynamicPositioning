@@ -8,8 +8,6 @@
 #include <stdio.h>
 #include <time.h>
 
-struct timespec timeSpec;	// Used to get current time
-
 /*
  * Performs non-blocking checking on the standard input.
  * Use like this:
@@ -38,6 +36,7 @@ int kbhit()
  */
 unsigned long millis(void)
 {
+	struct timespec timeSpec;
 	clock_gettime(CLOCK_MONOTONIC, &timeSpec);
 	return (unsigned long) (timeSpec.tv_sec * 1000 + timeSpec.tv_nsec / 1000000);
 }

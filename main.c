@@ -4,6 +4,7 @@
  *
  */
 
+#include <stdio.h>
 #include <stdlib.h>
 #include "headers/pid_controller.h"
 #include "headers/my_utils.h"
@@ -50,11 +51,12 @@ void test_pid(void)
 {
 	// Setup PID-controller
 	set_pid_parameters(3.0, 2.0, 1.0);
+	float setPoint = 531.0;
+	set_pid_set_point(setPoint);
 	set_pid_output_limits(-100, 100);
 
 	unsigned long lastTime = millis();
 
-	int setPoint = 531;
 	float value = 47;
 	while (!kbhit())
 	{
@@ -63,9 +65,9 @@ void test_pid(void)
 		dt /= 1000.0;
 		lastTime = now;
 
-		int output = pid_compute(setPoint, value);
+		int output = pid_compute(value);
 		value += ((float) output) * dt;
-		printf("Set point: %3d \t Value: %4i\n", setPoint, (int) value);
+		printf("Set point: %3d \t Value: %4d\n", (int) setPoint, (int) value);
 		if (abs((int) value) > 1000)
 			break;
 	}

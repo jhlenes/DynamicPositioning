@@ -10,19 +10,21 @@
 #include "headers/pid_controller.h"
 #include "headers/my_utils.h"
 
-// PID constants
-float Kp, Ki, Kd;
+// PID coefficients
+static float Kp, Ki, Kd;
 
-float lastInput = 0.0;
-float integralTerm = 0.0;
-
-unsigned long lastTime = 0;
+static int setPoint;
 
 // Restrictions on the output
-int outMin, outMax;
+static int outMin, outMax;
 
-int pid_compute(float setPoint, float input)
+int pid_compute(int input)
 {
+	// static variables are initialized only once
+	static unsigned long lastTime = 0;
+	static int lastInput = 0;
+	static float integralTerm = 0.0;
+
 	if (lastTime == 0)
 		lastTime = millis();
 
@@ -30,25 +32,25 @@ int pid_compute(float setPoint, float input)
 	unsigned long timeNow = millis();
 
 	// time difference
-	float dt = timeNow - lastTime;
+	float dt = (float) (timeNow - lastTime);
 	dt /= 1000.0;	// Convert to seconds
 
 	// Calculate the terms
-	float error = setPoint - input;
+	float error = (float) (setPoint - input);
 
 	integralTerm += Ki * error * dt;
 
 	// ensure value is in bounds
 	if (integralTerm > outMax)
-		integralTerm = outMax;
+		integralTerm = (float) outMax;
 	else if (integralTerm < outMin)
-		integralTerm = outMin;
+		integralTerm = (float) outMin;
 
 	// by using change in input instead of change in error,
 	// we get no output spikes when the set point changes
-	float dInput = (input - lastInput) / dt;
+	float dInput = (float) (input - lastInput) / dt;
 
-	int output = Kp * error + integralTerm - Kd * dInput;
+	int output = (int) (Kp * error + integralTerm - Kd * dInput);
 
 	// ensure output is in bounds
 	if (output > outMax)
@@ -61,7 +63,6 @@ int pid_compute(float setPoint, float input)
 	lastTime = timeNow;
 
 	return output;
-
 }
 
 void set_pid_parameters(float P, float I, float D)
@@ -71,7 +72,12 @@ void set_pid_parameters(float P, float I, float D)
 	Kd = D;
 }
 
-void set_pid_output_limits(float min, float max)
+void set_pid_set_point(int value)
+{
+	setPoint = value;
+}
+
+void set_pid_output_limits(int min, int max)
 {
 	if (min > max)
 		return;

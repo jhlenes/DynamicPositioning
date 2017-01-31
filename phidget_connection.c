@@ -5,13 +5,13 @@
  *
  */
 
-#include "headers/phidget_connection.h"
-
+#include <stdio.h>
 #include <phidget21.h>
+#include "headers/phidget_connection.h"
 #include "headers/responsive_analog_read.h"
 
-CPhidgetInterfaceKitHandle kitHandle = 0;	// Declare an InterfaceKit handle
-CPhidgetServoHandle servoHandle = 0;		// Declare a servo handle
+static CPhidgetInterfaceKitHandle kitHandle;	// Declare an InterfaceKit handle
+static CPhidgetServoHandle servoHandle;			// Declare a servo handle
 
 /*
  * Is called whenever a phidget is attached. Prints name and serial number to the console.
@@ -136,6 +136,12 @@ int setup_servo_motor_connection()
 	return 0;
 }
 
+/*
+ *	Sets up the interface kit and servo motor
+ *
+ *  returns: 	0 if successful
+ *  			1 if failed
+ */
 int connect_phidgets(void)
 {
 	// Setup a connection to the phidgets we are going to use
@@ -146,10 +152,13 @@ int connect_phidgets(void)
 	return 0;
 }
 
+/*
+ * Gets the sensor value from the interface kit
+ *
+ * 	returns:	the sensor value (0-1000)
+ */
 int get_sensor_value(void)
 {
-	// TODO: Learn pointers
-
 	int sensorValue;
 	CPhidgetInterfaceKit_getSensorValue(kitHandle, 0, &sensorValue);
 
@@ -158,20 +167,29 @@ int get_sensor_value(void)
 	return sensorValue;
 }
 
-int get_servo_min_max(double *min, double *max)
+/*
+ * Gets the minimum position and maximum position of the servo
+ */
+void get_servo_min_max(double *min, double *max)
 {
 	CPhidgetServo_getPositionMin(servoHandle, 0, min);
 	CPhidgetServo_getPositionMax(servoHandle, 0, max);
-	return 0;
+	return;
 }
 
-int set_servo_position(double position)
+/*
+ * Sets the servo position
+ */
+void set_servo_position(double position)
 {
 	CPhidgetServo_setPosition(servoHandle, 0, position);
-	return 0;
+	return;
 }
 
-int close_connections(void)
+/*
+ * Closes the connections to the phidgets
+ */
+void close_connections(void)
 {
 	CPhidget_close((CPhidgetHandle) kitHandle);
 	CPhidget_delete((CPhidgetHandle) kitHandle);
@@ -179,6 +197,6 @@ int close_connections(void)
 	CPhidget_close((CPhidgetHandle) servoHandle);
 	CPhidget_delete((CPhidgetHandle) servoHandle);
 
-	return 0;
+	return;
 }
 

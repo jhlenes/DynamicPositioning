@@ -5,8 +5,9 @@
  *
  */
 
+#include "headers/phidget_connection.h"
+
 #include <phidget21.h>
-#include "headers/connection.h"
 #include "headers/responsive_analog_read.h"
 
 CPhidgetInterfaceKitHandle kitHandle = 0;	// Declare an InterfaceKit handle

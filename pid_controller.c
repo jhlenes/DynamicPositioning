@@ -29,6 +29,7 @@ int pid_compute(float setPoint, float input)
 	// get current time in milliseconds
 	unsigned long timeNow = millis();
 
+	// time difference
 	float dt = timeNow - lastTime;
 	dt /= 1000.0;	// Convert to seconds
 

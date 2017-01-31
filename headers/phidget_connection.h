@@ -1,5 +1,5 @@
-#ifndef HEADERS_CONNECTION_H_
-#define HEADERS_CONNECTION_H_
+#ifndef HEADERS_PHIDGET_CONNECTION_H_
+#define HEADERS_PHIDGET_CONNECTION_H_
 
 #include <stdio.h>
 
@@ -9,4 +9,4 @@ int get_servo_min_max(double *min, double *max);
 int set_servo_position(double position);
 int close_connections(void);
 
-#endif /* HEADERS_CONNECTION_H_ */
+#endif /* HEADERS_PHIDGET_CONNECTION_H_ */

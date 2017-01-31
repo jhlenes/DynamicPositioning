@@ -6,8 +6,8 @@
 
 #include <stdlib.h>
 #include "headers/pid_controller.h"
-#include "headers/connection.h"
 #include "headers/my_utils.h"
+#include "headers/phidget_connection.h"
 
 void test_pid(void);
 

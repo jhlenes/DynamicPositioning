@@ -7,50 +7,51 @@
  *
  */
 
+#include <stdio.h>
 #include "headers/pid_controller.h"
 #include "headers/my_utils.h"
 
 // PID coefficients
 static float Kp, Ki, Kd;
 
-static int setPoint;
+static float setPoint;
 
 // Restrictions on the output
-static int outMin, outMax;
+static float outMin, outMax;
 
-int pid_compute(int input)
+float pid_compute(float input)
 {
 	// static variables are initialized only once
 	static unsigned long lastTime = 0;
-	static int lastInput = 0;
+	static float lastInput = 0;
 	static float integralTerm = 0.0;
 
 	if (lastTime == 0)
-		lastTime = millis();
+		lastTime = nano_time();
 
 	// get current time in milliseconds
-	unsigned long timeNow = millis();
+	unsigned long timeNow = nano_time();
 
 	// time difference
 	float dt = (float) (timeNow - lastTime);
-	dt /= 1000.0;	// Convert to seconds
+	dt = FROM_NANOS(dt);	// Convert to seconds
 
 	// Calculate the terms
-	float error = (float) (setPoint - input);
+	float error = setPoint - input;
 
 	integralTerm += Ki * error * dt;
 
 	// ensure value is in bounds
 	if (integralTerm > outMax)
-		integralTerm = (float) outMax;
+		integralTerm = outMax;
 	else if (integralTerm < outMin)
-		integralTerm = (float) outMin;
+		integralTerm = outMin;
 
 	// by using change in input instead of change in error,
 	// we get no output spikes when the set point changes
-	float dInput = (float) (input - lastInput) / dt;
+	float dInput = (input - lastInput) / dt;
 
-	int output = (int) (Kp * error + integralTerm - Kd * dInput);
+	float output = Kp * error + integralTerm - Kd * dInput;
 
 	// ensure output is in bounds
 	if (output > outMax)
@@ -61,7 +62,6 @@ int pid_compute(int input)
 	// remember some variables for next iteration
 	lastInput = input;
 	lastTime = timeNow;
-
 	return output;
 }
 
@@ -72,12 +72,12 @@ void set_pid_parameters(float P, float I, float D)
 	Kd = D;
 }
 
-void set_pid_set_point(int value)
+void set_pid_set_point(float value)
 {
 	setPoint = value;
 }
 
-void set_pid_output_limits(int min, int max)
+void set_pid_output_limits(float min, float max)
 {
 	if (min > max)
 		return;

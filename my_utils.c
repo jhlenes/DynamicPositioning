@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
+#include "headers/my_utils.h"
 
 /*
  * Performs non-blocking checking on the standard input.
@@ -32,12 +33,12 @@ int kbhit()
 }
 
 /*
- * Returns current time in milliseconds
+ * Returns current time in nanoseconds
  */
-unsigned long millis(void)
+unsigned long nano_time(void)
 {
 	struct timespec timeSpec;
 	clock_gettime(CLOCK_MONOTONIC, &timeSpec);
-	return (unsigned long) (timeSpec.tv_sec * 1000 + timeSpec.tv_nsec / 1000000);
+	return (unsigned long) (TO_NANOS(timeSpec.tv_sec) + timeSpec.tv_nsec);
 }
 

@@ -15,11 +15,13 @@ void test_pid(void);
 int main(void)
 {
 
+	/*
 	if (connect_phidgets())
 		return 1;	// Could not connect
 
-	// Initialize setPoint to current location
-	float setPoint = get_sensor_value();
+	// initialize setPoint to current location
+	float setPoint = (float) get_sensor_value();
+	set_pid_set_point(setPoint);
 
 	// setup PID-controller
 	set_pid_parameters(3.0, 2.0, 1.0);
@@ -32,18 +34,18 @@ int main(void)
 	while (!kbhit()) // while enter is not pressed
 	{
 		// read position
-		int sensorValue = get_sensor_value();
+		float sensorValue = (float) get_sensor_value();
 
 		// calculate new servo position
-		int output = pid_compute(setPoint, sensorValue);
+		float output = pid_compute(sensorValue);
 
 		// set the new servo position
 		set_servo_position((double) output);
 	}
 
 	close_connections();
-
-	//test_pid();
+	*/
+	test_pid();
 
 }
 
@@ -53,23 +55,22 @@ void test_pid(void)
 	set_pid_parameters(3.0, 2.0, 1.0);
 	float setPoint = 531.0;
 	set_pid_set_point(setPoint);
-	set_pid_output_limits(-100, 100);
+	set_pid_output_limits(-100.0, 100.0);
 
-	unsigned long lastTime = millis();
+	unsigned long lastTime = nano_time();
 
-	float value = 47;
+	float value = 47.0;
 	while (!kbhit())
 	{
-		unsigned long now = millis();
+		unsigned long now = nano_time();
 		float dt = now - lastTime;
-		dt /= 1000.0;
+		dt = FROM_NANOS(dt);
 		lastTime = now;
 
-		int output = pid_compute(value);
-		value += ((float) output) * dt;
-		printf("Set point: %3d \t Value: %4d\n", (int) setPoint, (int) value);
-		if (abs((int) value) > 1000)
-			break;
+		float output = pid_compute(value);
+		value += output * dt;
+		printf("Set point: %3.0f \t Value: %4.1f\n", setPoint, value);
+
 	}
 	printf("User hit enter!");
 }

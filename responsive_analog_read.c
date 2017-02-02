@@ -35,13 +35,13 @@ int responsive_analog_read(int newValue)
 	static float smoothValue = 0;
 
 	// get difference between new input value and current smooth value
-	unsigned int diff = abs(newValue - smoothValue);
+	float diff = abs((int) ((float) newValue - smoothValue));
 
 	// multiply the input by SNAP_MULTIPLER so input values fit the snap curve better.
 	float snap = snap_curve(diff * SNAP_MULTIPLIER);
 
 	// calculate the exponential moving average based on the snap
-	smoothValue += (newValue - smoothValue) * snap;
+	smoothValue += ((float) newValue - smoothValue) * snap;
 
 	// ensure output is in bounds
 	if (smoothValue < 0.0)

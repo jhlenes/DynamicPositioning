@@ -12,15 +12,15 @@
 #include "headers/my_utils.h"
 #include "headers/phidget_connection.h"
 
-static const struct timespec LOOP_DELAY = { 0, 100000000L };	// 0.1 seconds
+static const struct timespec LOOP_DELAY = { 0, 1000000L };	// 0.001 seconds
 
 void test_pid(void);
 
 int main(void)
 {
 
-	test_pid();
-	exit(0);
+	//test_pid();
+	//exit(0);
 
 	if (connect_phidgets())
 		return 1;	// Could not connect
@@ -31,7 +31,7 @@ int main(void)
 			"#\t%8s\t%8s\t%8s\n", "time[s]", "sensor", "output");
 
 	// setup PID-controller
-	set_pid_parameters(5.0, 3.0, 0.2);
+	set_pid_parameters(-1.0, -0.5, -0.01);
 
 	// initialize setPoint to current location
 	float setPoint = (float) get_sensor_value();
@@ -40,7 +40,7 @@ int main(void)
 	// set output bounds
 	double min, max;
 	get_servo_min_max(&min, &max);
-	set_pid_output_limits((float) min, (float) max);
+	set_pid_output_limits(40.0, 120.0);	// TODO: Figure out what values work here
 
 	unsigned long startTime = nano_time();
 
@@ -52,9 +52,11 @@ int main(void)
 
 		// read position
 		float sensorValue = (float) get_sensor_value();
+		printf("setpoint: %5.1f sensorValue: %5.1f ", setPoint, sensorValue);
 
 		// calculate new servo position
 		float output = pid_compute(sensorValue);
+		printf("output: %5.1f\n", output);
 
 		// set the new servo position
 		set_servo_position((double) output);
@@ -63,6 +65,8 @@ int main(void)
 		float timePassed = FROM_NANOS((float ) (nano_time() - startTime));
 		fprintf(fp, " \t%8f\t%8f\t%8f\n", timePassed, sensorValue, output);
 	}
+
+	set_servo_position(0.0);
 
 	fclose(fp);
 	close_connections();

@@ -12,6 +12,7 @@
 
 static CPhidgetInterfaceKitHandle kitHandle;	// Declare an InterfaceKit handle
 static CPhidgetServoHandle servoHandle;			// Declare a servo handle
+static const int SENSOR_ID = 2;
 
 /*
  * Is called whenever a phidget is attached. Prints name and serial number to the console.
@@ -160,7 +161,7 @@ int connect_phidgets(void)
 int get_sensor_value(void)
 {
 	int sensorValue;
-	CPhidgetInterfaceKit_getSensorValue(kitHandle, 0, &sensorValue);
+	CPhidgetInterfaceKit_getSensorValue(kitHandle, SENSOR_ID, &sensorValue);
 
 	// reduce noise
 	sensorValue = responsive_analog_read(sensorValue);
@@ -183,6 +184,12 @@ void get_servo_min_max(double *min, double *max)
 void set_servo_position(double position)
 {
 	CPhidgetServo_setPosition(servoHandle, 0, position);
+	return;
+}
+
+void get_servo_position(double *position)
+{
+	CPhidgetServo_getPosition(servoHandle, 0, position);
 	return;
 }
 

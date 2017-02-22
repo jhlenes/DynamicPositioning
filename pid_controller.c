@@ -52,7 +52,6 @@ float pid_compute(float input)
 	float dInput = (input - lastInput) / dt;
 
 	float output = Kp * error + integralTerm - Kd * dInput;
-	printf("P: %5.1f \t I: %6.1f \t D: %5.1f\n", Kp * error, integralTerm, -Kd * dInput);
 
 	// ensure output is in bounds
 	if (output > outMax)

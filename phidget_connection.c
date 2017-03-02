@@ -12,7 +12,7 @@
 
 static CPhidgetInterfaceKitHandle kitHandle;	// Declare an InterfaceKit handle
 static CPhidgetServoHandle servoHandle;			// Declare a servo handle
-static const int SENSOR_ID = 2;
+static const int SENSOR_ID = 5;
 
 /*
  * Is called whenever a phidget is attached. Prints name and serial number to the console.

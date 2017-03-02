@@ -7,23 +7,37 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <pthread.h>
+#include <GL/glut.h>
 
 #include "headers/pid_controller.h"
 #include "headers/my_utils.h"
 #include "headers/phidget_connection.h"
+#include "headers/animation.h"
 
 static const struct timespec LOOP_DELAY = { 0, 1000000L };	// 0.001 seconds
+static float setPoint;
 
-void test_pid(void);
+void test_pid(int argc, char *argv[]);
 
-int main(void)
+void alter_set_point(float value)
+{
+	setPoint += value;
+	set_pid_set_point(setPoint);
+}
+int main(int argc, char *argv[])
 {
 
-	//test_pid();
-	//exit(0);
+	test_pid(argc, argv);
+	exit(0);
 
 	if (connect_phidgets())
 		return 1;	// Could not connect
+
+	// Start animation
+	glutInit(&argc, argv);
+	pthread_t animationThread;
+	pthread_create(&animationThread, NULL, start_animation, NULL);
 
 	// open output file
 	FILE *fp = fopen("output.dat", "w");
@@ -31,16 +45,16 @@ int main(void)
 			"#\t%8s\t%8s\t%8s\n", "time[s]", "sensor", "output");
 
 	// setup PID-controller
-	set_pid_parameters(-1.0, -0.5, -0.01);
+	set_pid_parameters(-3.0, -1.0, -0.05); // Funker greit: {-1.0, -0.5, -0.01}
 
 	// initialize setPoint to current location
-	float setPoint = (float) get_sensor_value();
+	setPoint = (float) get_sensor_value();
 	set_pid_set_point(setPoint);
 
 	// set output bounds
 	double min, max;
 	get_servo_min_max(&min, &max);
-	set_pid_output_limits(40.0, 120.0);	// TODO: Figure out what values work here
+	set_pid_output_limits(40.0, 115.0);	// TODO: Figure out what values work here
 
 	unsigned long startTime = nano_time();
 
@@ -64,6 +78,9 @@ int main(void)
 		// write data to file
 		float timePassed = FROM_NANOS((float ) (nano_time() - startTime));
 		fprintf(fp, " \t%8f\t%8f\t%8f\n", timePassed, sensorValue, output);
+
+		AnimationData data = { output, sensorValue, setPoint };
+		update_animation_data(data);
 	}
 
 	set_servo_position(0.0);
@@ -77,7 +94,7 @@ int main(void)
 	pclose(gnuplot);
 }
 
-void test_pid(void)
+void test_pid(int argc, char *argv[])
 {
 
 	// open file
@@ -85,9 +102,14 @@ void test_pid(void)
 	fprintf(fp, "# This file contains the data from running the dynamic positioning program.\n"
 			"#\t%8s\t%8s\t%8s\n", "time[s]", "sensor", "output");
 
+	// Start animation
+	glutInit(&argc, argv);
+	pthread_t animationThread;
+	pthread_create(&animationThread, NULL, start_animation, NULL);
+
 	// Setup PID-controller
-	set_pid_parameters(5.0, 3.0, 0.2);
-	float setPoint = 531.0;
+	set_pid_parameters(10.0, 5.0, 1.0);
+	setPoint = 697;
 	set_pid_set_point(setPoint);
 	set_pid_output_limits(-100.0, 100.0);
 
@@ -95,7 +117,7 @@ void test_pid(void)
 	unsigned long lastTime = nano_time();
 	unsigned long startTime = lastTime;
 
-	float value = 413.0;
+	float value = 0.0;
 	while (!kbhit())
 	{
 		nanosleep(&LOOP_DELAY, NULL); // sleep
@@ -114,6 +136,9 @@ void test_pid(void)
 		// Write to file
 		float timePassed = FROM_NANOS((float ) (now - startTime));
 		fprintf(fp, " \t%8f\t%8f\t%8f\n", timePassed, value, output);
+
+		AnimationData data = { output, value, setPoint };
+		update_animation_data(data);
 	}
 
 	printf("Finished, user hit enter!\n");
@@ -126,3 +151,4 @@ void test_pid(void)
 	pclose(gnuplot);
 
 }
+

@@ -6,7 +6,7 @@
  *
  */
 
-#include <stdlib.h>	// Function: abs()
+#include "headers/responsive_analog_read.h"
 
 static const int ANALOG_RESOLUTION = 1001;
 

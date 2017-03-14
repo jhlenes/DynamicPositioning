@@ -4,9 +4,6 @@
  *
  */
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <time.h>
 #include "headers/my_utils.h"
 
 /*

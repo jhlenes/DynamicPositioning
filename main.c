@@ -4,12 +4,6 @@
  *
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
-#include <pthread.h>
-#include <GL/glut.h>
-
 #include "headers/pid_controller.h"
 #include "headers/my_utils.h"
 #include "headers/phidget_connection.h"
@@ -35,7 +29,6 @@ int main(int argc, char *argv[])
 		return 1;	// Could not connect
 
 	// Start animation
-	glutInit(&argc, argv);
 	pthread_t animationThread;
 	pthread_create(&animationThread, NULL, start_animation, NULL);
 
@@ -45,15 +38,15 @@ int main(int argc, char *argv[])
 			"#\t%8s\t%8s\t%8s\n", "time[s]", "sensor", "output");
 
 	// setup PID-controller
-	set_pid_parameters(-3.0, -1.0, -0.05); // Funker greit: {-1.0, -0.5, -0.01}
+	set_pid_parameters(-0.5, -0.2, -0.05); // Funker greit: {-0.3, -0.2, -0.05}
 
 	// initialize setPoint to current location
 	setPoint = (float) get_sensor_value();
 	set_pid_set_point(setPoint);
 
 	// set output bounds
-	double min, max;
-	get_servo_min_max(&min, &max);
+	//double min, max;
+	//get_servo_min_max(&min, &max); 	// These values are not worth anything
 	set_pid_output_limits(40.0, 115.0);	// TODO: Figure out what values work here
 
 	unsigned long startTime = nano_time();
@@ -66,11 +59,9 @@ int main(int argc, char *argv[])
 
 		// read position
 		float sensorValue = (float) get_sensor_value();
-		printf("setpoint: %5.1f sensorValue: %5.1f ", setPoint, sensorValue);
 
 		// calculate new servo position
 		float output = pid_compute(sensorValue);
-		printf("output: %5.1f\n", output);
 
 		// set the new servo position
 		set_servo_position((double) output);
@@ -81,6 +72,9 @@ int main(int argc, char *argv[])
 
 		AnimationData data = { output, sensorValue, setPoint };
 		update_animation_data(data);
+
+		// Print to screen
+		printf("setpoint: %5.1f sensorValue: %5.1f output: %5.1f\n", setPoint, sensorValue, output);
 	}
 
 	set_servo_position(0.0);
@@ -103,7 +97,6 @@ void test_pid(int argc, char *argv[])
 			"#\t%8s\t%8s\t%8s\n", "time[s]", "sensor", "output");
 
 	// Start animation
-	glutInit(&argc, argv);
 	pthread_t animationThread;
 	pthread_create(&animationThread, NULL, start_animation, NULL);
 
@@ -131,14 +124,15 @@ void test_pid(int argc, char *argv[])
 		float output = pid_compute(value);
 		value += output * dt;
 
-		printf("Set point: %3.0f \t Value: %4.1f \t Output: %4.1f\n\n", setPoint, value, output);
-
 		// Write to file
 		float timePassed = FROM_NANOS((float ) (now - startTime));
 		fprintf(fp, " \t%8f\t%8f\t%8f\n", timePassed, value, output);
 
 		AnimationData data = { output, value, setPoint };
 		update_animation_data(data);
+
+		// Print to screen
+		printf("setpoint: %5.1f sensorValue: %5.1f output: %5.1f\n", setPoint, value, output);
 	}
 
 	printf("Finished, user hit enter!\n");

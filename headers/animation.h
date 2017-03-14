@@ -8,10 +8,9 @@
 #ifndef HEADERS_ANIMATION_H_
 #define HEADERS_ANIMATION_H_
 
-#include "../DynamicPositioning.h"
-
-void *start_animation(void *void_ptr);
-
+#include <stdio.h>
+#include <pthread.h>
+#include <GL/freeglut.h>
 
 typedef struct
 {
@@ -20,7 +19,7 @@ typedef struct
 	int setPoint;
 } AnimationData;
 
+void *start_animation(void *void_ptr);
 void update_animation_data(AnimationData newData);
-
 
 #endif /* HEADERS_ANIMATION_H_ */

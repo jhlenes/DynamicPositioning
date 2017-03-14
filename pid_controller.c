@@ -7,9 +7,7 @@
  *
  */
 
-#include <stdio.h>
 #include "headers/pid_controller.h"
-#include "headers/my_utils.h"
 
 // PID coefficients
 static float Kp, Ki, Kd;

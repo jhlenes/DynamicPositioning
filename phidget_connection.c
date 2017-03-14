@@ -5,14 +5,11 @@
  *
  */
 
-#include <stdio.h>
-#include <phidget21.h>
 #include "headers/phidget_connection.h"
-#include "headers/responsive_analog_read.h"
 
 static CPhidgetInterfaceKitHandle kitHandle;	// Declare an InterfaceKit handle
 static CPhidgetServoHandle servoHandle;			// Declare a servo handle
-static const int SENSOR_ID = 5;
+static const int SENSOR_ID = 2;
 
 /*
  * Is called whenever a phidget is attached. Prints name and serial number to the console.

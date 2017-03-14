@@ -31,3 +31,7 @@
 # Debug files
 *.dSYM/
 *.su
+
+# Generated files
+output.dat
+DynamicPositioning

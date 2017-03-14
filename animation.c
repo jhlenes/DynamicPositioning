@@ -5,11 +5,8 @@
  *      Author: henrik
  */
 
-#include <stdio.h>
-#include <pthread.h>
-#include <GL/freeglut.h>
-
 #include "headers/animation.h"
+void alter_set_point(float value); // Sends keyboard input to main loop
 
 #define SETLINE_WIDTH 0.03
 
@@ -18,8 +15,9 @@ static AnimationData animationData = { 0, 0, 0 };
 void display(void)
 {
 	// Update variables
-	float boatX = (float) animationData.position / 1023 * 10.0 - 5.0;
-	float setPointX = (float) animationData.setPoint / 1023 * 10.0 - 5.0;
+	// sensor: left-right: 480 - 206
+	float boatX = -(float) animationData.position / 1023 * 10.0 + 5.0;
+	float setPointX = -(float) animationData.setPoint / 1023 * 10.0 + 5.0;
 
 	/*  clear all pixels  */
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -56,19 +54,18 @@ void display(void)
 
 void keyboard(unsigned char key, int x, int y)
 {
-	printf("key pressed: %d\n", key);
+
 }
 
 void special_keyboard(int key, int x, int y)
 {
-	printf("key pressed: %d\n", key);
 	switch (key)
 	{
 	case GLUT_KEY_LEFT:
-		alter_set_point(-10.0);
+		alter_set_point(10.0);
 		break;
 	case GLUT_KEY_RIGHT:
-		alter_set_point(10.0);
+		alter_set_point(-10.0);
 		break;
 	}
 }
@@ -86,9 +83,14 @@ void init(void)
 
 void *start_animation(void *void_ptr)
 {
+	// No input args supported
+	int argc = 0;
+	char *argv[0];
+	glutInit(&argc, argv);
+
 	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
 	glutInitWindowSize(750, 500);
-	glutInitWindowPosition(200, 200);
+	glutInitWindowPosition(400, 100);
 	glutCreateWindow("Dynamic Positioning");
 	init();
 	glutDisplayFunc(display);

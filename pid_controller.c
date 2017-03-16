@@ -60,6 +60,10 @@ float pid_compute(float input)
 	// remember some variables for next iteration
 	lastInput = input;
 	lastTime = timeNow;
+
+	// Print to screen
+	//printf("Kp: %5.1f Ki: %5.1f Kd: %5.1f\n", Kp * error, integralTerm, Kd * dInput);
+
 	return output;
 }
 

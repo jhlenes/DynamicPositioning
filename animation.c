@@ -5,10 +5,14 @@
  *      Author: henrik
  */
 
+#include <stdbool.h>
 #include "headers/animation.h"
+
 void alter_set_point(float value); // Sends keyboard input to main loop
+void set_program_status(_Bool status);
 
 #define SETLINE_WIDTH 0.03
+#define KEY_ENTER 13
 
 static AnimationData animationData = { 0, 0, 0 };
 
@@ -54,7 +58,12 @@ void display(void)
 
 void keyboard(unsigned char key, int x, int y)
 {
-
+	switch (key)
+	{
+	case KEY_ENTER:
+		glutLeaveMainLoop();
+		break;
+	}
 }
 
 void special_keyboard(int key, int x, int y)
@@ -62,12 +71,17 @@ void special_keyboard(int key, int x, int y)
 	switch (key)
 	{
 	case GLUT_KEY_LEFT:
-		alter_set_point(10.0);
+		alter_set_point(5.0);
 		break;
 	case GLUT_KEY_RIGHT:
-		alter_set_point(-10.0);
+		alter_set_point(-5.0);
 		break;
 	}
+}
+
+void close_func()
+{
+	set_program_status(false);
 }
 
 void init(void)
@@ -89,14 +103,22 @@ void *start_animation(void *void_ptr)
 	glutInit(&argc, argv);
 
 	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
-	glutInitWindowSize(750, 500);
-	glutInitWindowPosition(400, 100);
+	glutInitWindowSize(500, 400);
+	glutInitWindowPosition(50, 50);
 	glutCreateWindow("Dynamic Positioning");
 	init();
+
+	// Don't exit on window close, some things needs to be done afterwards e.g. plotting
+	glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_GLUTMAINLOOP_RETURNS);
+
+	// Set glut functions
 	glutDisplayFunc(display);
 	glutIdleFunc(display);
 	glutKeyboardFunc(keyboard);
 	glutSpecialFunc(special_keyboard);
+	glutCloseFunc(close_func);
+
+	// Start
 	glutMainLoop();
 	return NULL;
 }

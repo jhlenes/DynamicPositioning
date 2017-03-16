@@ -11,7 +11,7 @@
 static const int ANALOG_RESOLUTION = 1001;
 
 // value between 0 and 1 that controls how smooth the output is
-static const float SNAP_MULTIPLIER = 0.007;
+static const float SNAP_MULTIPLIER = 0.1;
 
 /*
  * Calculates a number between 0 and 1 that determines how

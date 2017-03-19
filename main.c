@@ -1,6 +1,17 @@
 /*
  *
- * The main program: the main() method combines everything in this project
+ * The main program: the main() method combines everything in this project.
+ *
+ * TODO: Make new thread that handles printing to screen and file
+ * Use more #defines
+ *
+ * Rapport: 10 sider ++
+ * motivasjon
+ * teori
+ * hva som ble gjort
+ * struktur
+ * konklusjon
+ *
  *
  */
 
@@ -34,19 +45,6 @@ void *printer_func(void *void_ptr);
 
 int main(int argc, char *argv[])
 {
-
-	/*
-	 * TODO: Make new thread that handles printing to screen and file
-	 * Use more #defines
-	 *
-	 * Rapport: 10s ++
-	 * motivasjon
-	 * teori
-	 * hva som ble gjort
-	 * struktur
-	 * konklusjon
-	 *
-	 */
 
 	test_pid(argc, argv);
 	return 0;
@@ -124,7 +122,7 @@ void test_pid(int argc, char *argv[])
 
 	// Setup PID-controller
 	set_pid_parameters(0.2, 0.15, -0.01);
-	setPoint = 700;
+	setPoint = 500;
 	set_pid_set_point(setPoint);
 	set_pid_output_limits((float) MIN_OUTPUT, (float) MAX_OUTPUT);
 
@@ -144,7 +142,7 @@ void test_pid(int argc, char *argv[])
 		lastTime = now;
 
 		float output = pid_compute(value);
-		value += (output - ((MAX_OUTPUT + MIN_OUTPUT) / 2.0)) * 10.0 * dt;
+		value += (output - ((MAX_OUTPUT + MIN_OUTPUT) / 2.0)) * 30.0 * dt;
 
 		AnimationData data = { output, value, setPoint };
 		update_animation_data(data);
@@ -178,8 +176,8 @@ void *printer_func(void *void_ptr)
 				(*printData).sensorValue, (*printData).servoValue);
 
 		// Write to file
-		fprintf(fp, " \t%8.3f\t%8.3f\t%8.3f\t%8.3f\n", (*printData).timePassed, (*printData).sensorValue,
-				(*printData).servoValue, (*printData).setPoint);
+		fprintf(fp, " \t%8.3f\t%8.3f\t%8.3f\t%8.3f\n", (*printData).timePassed,
+				(*printData).sensorValue, (*printData).servoValue, (*printData).setPoint);
 	}
 
 	// close file

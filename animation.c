@@ -6,26 +6,24 @@
  */
 
 #include <stdbool.h>
-#include "headers/animation.h"
 #include <string.h>
-
-void alter_set_point(float value); // Sends keyboard input to main loop
-void set_program_status(_Bool status);
+#include "headers/main.h"
+#include "headers/animation.h"
 
 #define SETLINE_WIDTH 0.03
 #define SETLINE_HEIGHT 1.4
 #define KEY_ENTER 13
 
-static AnimationData animationData = { 0, 0, 0 };
+static Data *boatData;
 
-GLuint speedboat;
+static GLuint speedboat;
 
 void display(void)
 {
 	// Update variables
 	// sensor: left-right: 480 - 206
-	float boatX = -(float) animationData.position / 1000 * 10.0 + 5.0;
-	float setPointX = -(float) animationData.setPoint / 1000 * 10.0 + 5.0;
+	float boatX = -(float) (*boatData).sensorValue / 1000 * 10.0 + 5.0;
+	float setPointX = -(float) (*boatData).setPoint / 1000 * 10.0 + 5.0;
 
 	// clear screen
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -37,7 +35,7 @@ void display(void)
 	glEnable(GL_LIGHTING);
 	glTranslatef(boatX, -4.0, 0.0);
 	glRotatef(90, 0.0, 1.0, 0.0);
-	glRotatef(10, 0.0, 0.0, 1.0);
+	glRotatef(15, 0.0, 0.0, 1.0);
 	glScalef(0.2, 0.2, 0.2);
 
 	glCallList(speedboat);
@@ -72,10 +70,10 @@ void special_keyboard(int key, int x, int y)
 	switch (key)
 	{
 	case GLUT_KEY_LEFT:
-		alter_set_point(5.0);
+		(*boatData).setPoint += 5.0;
 		break;
 	case GLUT_KEY_RIGHT:
-		alter_set_point(-5.0);
+		(*boatData).setPoint -= 5.0;
 		break;
 	}
 }
@@ -94,11 +92,6 @@ void init(void)
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	glOrtho(-5.0, 5.0, -5.0, 5.0, -5.0, 5.0);
-}
-
-void update_animation_data(AnimationData newData)
-{
-	animationData = newData;
 }
 
 void loadObj(char fname[])
@@ -234,29 +227,14 @@ void loadObj(char fname[])
 
 }
 
-void reshape(int w, int h)
-{
-	glViewport(0, 0, (GLsizei) w, (GLsizei) h);
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	if (w <= h)
-		glOrtho(-1.5, 1.5, -1.5 * (GLfloat) h / (GLfloat) w, 1.5 * (GLfloat) h / (GLfloat) w, -10.0,
-				10.0);
-	else
-		glOrtho(-1.5 * (GLfloat) w / (GLfloat) h, 1.5 * (GLfloat) w / (GLfloat) h, -1.5, 1.5, -10.0,
-				10.0);
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-}
-
 void setupLightning()
 {
 
 	GLfloat light_position[] = { 5.0, 5.0, 3.0, 0.0 }; // OK: { 5.0, 5.0, -5.0, 0.0 }
 
-	GLfloat ambient[] = { 0.1, 0.1, 0.1, 1.0 };
+	//GLfloat ambient[] = { 0.1, 0.1, 0.1, 1.0 };
 	GLfloat diffuse[] = { 0.8, 0.8, 0.8, 1.0 };
-	GLfloat specular[] = { 0.1, 0.1, 0.1, 1.0 };
+	//GLfloat specular[] = { 0.1, 0.1, 0.1, 1.0 };
 	GLfloat shininess[] = { 0.0 };
 
 	GLfloat mat[] = { 1.0, 0.2, 0.2, 1.0 };
@@ -279,6 +257,8 @@ void setupLightning()
 
 void *start_animation(void *void_ptr)
 {
+	boatData = (Data*) void_ptr;
+
 	// No input args supported
 	int argc = 0;
 	char *argv[0];

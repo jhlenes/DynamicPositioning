@@ -12,14 +12,6 @@
 #include <pthread.h>
 #include <GL/freeglut.h>
 
-typedef struct
-{
-	int motorValue;
-	int position;
-	int setPoint;
-} AnimationData;
-
 void *start_animation(void *void_ptr);
-void update_animation_data(AnimationData newData);
 
 #endif /* HEADERS_ANIMATION_H_ */

@@ -1,37 +1,37 @@
-/*
+/**************************************************
  *
- * Implementations of different utility functions that are useful in this project
+ * FILENAME:	my_utils.c
  *
- */
+ * DESCRIPTION:
+ * 			Implementations of different utility functions that are useful.
+ *
+ * PUBLIC FUNCTIONS:
+ * 			unsigned long nano_time(void)
+ *
+ * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 20.03.2017
+ *
+ **************************************************/
 
+#include <stdlib.h>
+#include <stdio.h>
+#include <time.h>
 #include "headers/my_utils.h"
 
-/*
- * Performs non-blocking checking on the standard input.
- * Use like this:
+/**************************************************
+ * NAME: unsigned long nano_time(void)
  *
- * 	while(!kbhit())
- *	{
- *   	// do certain operation..
- *	}
- *	// user hits enter.
+ * DESCRIPTION:
+ * 			Returns the current time in nanoseconds.
  *
- */
-int kbhit()
-{
-	struct timeval tv;
-	fd_set fds;
-	tv.tv_sec = 0;
-	tv.tv_usec = 0;
-	FD_ZERO(&fds);
-	FD_SET(0, &fds);
-	select(1, &fds, NULL, NULL, &tv);
-	return FD_ISSET(0, &fds);
-}
-
-/*
- * Returns current time in nanoseconds
- */
+ * INPUTS:
+ * 		none
+ *
+ * OUTPUTS:
+ *     	RETURN:
+ *        	unsigned long:	The current time in nanoseconds.
+ *
+ * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 20.03.2017
+ **************************************************/
 unsigned long nano_time(void)
 {
 	struct timespec timeSpec;

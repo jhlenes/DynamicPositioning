@@ -5,10 +5,12 @@
  *      Author: henrik
  */
 
-#include <stdbool.h>
 #include <string.h>
+#include <stdio.h>
+#include <pthread.h>
+#include <GL/freeglut.h>
+
 #include "headers/main.h"
-#include "headers/animation.h"
 
 #define SETLINE_WIDTH 0.03
 #define SETLINE_HEIGHT 1.4
@@ -16,6 +18,7 @@
 
 static Data *boatData;
 
+// OpenGL display list id
 static GLuint speedboat;
 
 void display(void)
@@ -80,7 +83,7 @@ void special_keyboard(int key, int x, int y)
 
 void close_func()
 {
-	set_program_status(false);
+	(*boatData).programRunning = false;
 }
 
 void init(void)

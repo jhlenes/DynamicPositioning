@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
 	pthread_create(&printThread, NULL, printer_func, &boatData);
 
 	// setup PID-controller {0.4, 0.4, 1.8}
-	set_pid_parameters(0.4, 0.4, 1.8); //
+	set_pid_coefficients(0.4, 0.4, 1.8); //
 
 	// initialize setPoint to current location
 	boatData.setPoint = (float) get_sensor_value() - TANK_WIDTH / 2.0;
@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
 		// sleep
 		nanosleep(&LOOP_DELAY, NULL);
 
-		set_pid_set_point(boatData.setPoint);
+		set_pid_setpoint(boatData.setPoint);
 
 		// read position
 		float sensorValue = (float) get_sensor_value();
@@ -112,7 +112,7 @@ void test_pid(int argc, char *argv[])
 	pthread_create(&printThread, NULL, printer_func, &boatData);
 
 	// Setup PID-controller
-	set_pid_parameters(0.2, 0.15, -0.01);
+	set_pid_coefficients(0.2, 0.15, -0.01);
 	boatData.setPoint = 500;
 	set_pid_output_limits((float) MIN_OUTPUT, (float) MAX_OUTPUT);
 
@@ -125,7 +125,7 @@ void test_pid(int argc, char *argv[])
 	{
 		nanosleep(&LOOP_DELAY, NULL); // sleep
 
-		set_pid_set_point(boatData.setPoint);
+		set_pid_setpoint(boatData.setPoint);
 
 		// get exact time since last loop
 		unsigned long now = nano_time();

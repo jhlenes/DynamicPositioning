@@ -59,7 +59,7 @@ static float smoothness_curve(float diff)
 }
 
 /**************************************************
- * NAME: responsive_analog_read(int newValue)
+ * NAME: int responsive_analog_read(int newValue)
  *
  * DESCRIPTION:
  * 			Applies the exponential running average algorithm to values and

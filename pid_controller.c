@@ -65,7 +65,7 @@ float pid_compute(float input)
 
 	// time difference
 	float dt = (float) (timeNow - lastTime);
-	dt = FROM_NANOS(dt);	// Convert to seconds
+	dt = from_nanos(dt);	// Convert to seconds
 
 	// Calculate the terms
 	float error = setpoint - input;

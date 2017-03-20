@@ -1,16 +1,23 @@
-/*
- * animation.c
+/**************************************************
  *
- *  Created on: Mar 2, 2017
- *      Author: henrik
- */
+ * FILENAME:	animation.c
+ *
+ * DESCRIPTION:
+ * 			This file contains implementations for graphics based on OpenGL.
+ * 			It also handles keyboard events.
+ *
+ *
+ * PUBLIC FUNCTIONS:
+ * 			void *start_animation(void*)
+ *
+ * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 20.03.2017
+ *
+ **************************************************/
 
-#include <string.h>
-#include <stdio.h>
-#include <pthread.h>
 #include <GL/freeglut.h>
 
 #include "headers/main.h"
+#include "headers/obj_loader.h"
 
 #define SETLINE_WIDTH 0.03
 #define SETLINE_HEIGHT 1.4
@@ -20,45 +27,102 @@ static Data *boatData;
 
 // OpenGL display list id
 static GLuint speedboat;
+static GLuint setline;
 
-void display(void)
+/**************************************************
+ * NAME: static void display(void)
+ *
+ * DESCRIPTION:
+ * 			This function display stuff on the screen. It will run over and over
+ * 			handling the graphics.
+ *
+ * INPUTS:
+ *     	EXTERNALS:
+ *      	Data *boatData:		A struct containing data from the current run.
+ *      	GLuint speedboat:	ID for the speedboat display list.
+ *      	GLuint setline:		ID for the setline display list.
+ *
+ * OUTPUTS:
+ * 		none
+ *
+ * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 20.03.2017
+ **************************************************/
+static void display(void)
 {
 	// Update variables
 	// sensor: left-right: 480 - 206
 	float boatX = -(float) (*boatData).sensorValue / 1000 * 10.0 + 5.0;
 	float setPointX = -(float) (*boatData).setPoint / 1000 * 10.0 + 5.0;
+	float arrowX = -((*boatData).servoValue - 94.0) / 10.0 * 4.0 - 2.0;
+	float arrowColor = 1 + ((*boatData).servoValue - 94.0) / 10.0;
 
 	// clear screen
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	// Draw the boat
 	glMatrixMode(GL_MODELVIEW);
 
+	// Draw speed vector
+	glLoadIdentity();
+	glTranslatef(-0.5, 0.0, 0.0);
+	glColor3f(1.0, arrowColor, arrowColor);
+	glBegin(GL_QUADS);
+	glVertex3f(-2.0, 1.0, 0.0);
+	glVertex3f(-2.0, 0.0, 0.0);
+	glVertex3f(arrowX, 0.0, 0.0);
+	glVertex3f(arrowX, 1.0, 0.0);
+	glEnd();
+	glBegin(GL_TRIANGLES);
+	glVertex3f(arrowX, -0.5, 0.0);
+	glVertex3f(arrowX + 1.0, 0.5, 0.0);
+	glVertex3f(arrowX, 0.5, 0.0);
+	glVertex3f(arrowX, 1.5, 0.0);
+	glVertex3f(arrowX + 1.0, 0.5, 0.0);
+	glVertex3f(arrowX, 0.5, 0.0);
+	glEnd();
+	glColor3f(0.0, 0.0, 0.0);
+	glLineWidth(2.0);
+	glBegin(GL_LINE_LOOP);
+	glVertex3f(-2.0, 1.5, 0.0);
+	glVertex3f(-2.0, -0.5, 0.0);
+	glVertex3f(3.0, -0.5, 0.0);
+	glVertex3f(3.0, 1.5, 0.0);
+
+	glEnd();
+
+	// Draw boat
 	glLoadIdentity();
 	glEnable(GL_LIGHTING);
-	glTranslatef(boatX, -4.0, 0.0);
-	glRotatef(90, 0.0, 1.0, 0.0);
-	glRotatef(15, 0.0, 0.0, 1.0);
-	glScalef(0.2, 0.2, 0.2);
-
+	glTranslatef(boatX, 0.0, 0.0);
 	glCallList(speedboat);
 
 	// Draw setline
 	glLoadIdentity();
 	glDisable(GL_LIGHTING);
-	glTranslatef(setPointX, -3.5, 0.0);
-	glColor3f(0.0, 1.0, 0.0);
-	glBegin(GL_POLYGON);
-	glVertex3f(-SETLINE_WIDTH, -SETLINE_HEIGHT, 4.0);
-	glVertex3f(SETLINE_WIDTH, -SETLINE_HEIGHT, 4.0);
-	glVertex3f(SETLINE_WIDTH, SETLINE_HEIGHT, 4.0);
-	glVertex3f(-SETLINE_WIDTH, SETLINE_HEIGHT, 4.0);
-	glEnd();
+	glTranslatef(setPointX, 0.0, 0.0);
+	glCallList(setline);
 
 	glFlush();
 }
 
-void keyboard(unsigned char key, int x, int y)
+/**************************************************
+ * NAME: static void keyboard(unsigned char key, int x, int y)
+ *
+ * DESCRIPTION:
+ * 			This is the keyboard function handed to glut. It handles regular
+ * 			keypresses.
+ *
+ * INPUTS:
+ *     	PARAMETERS:
+ *     		unsigned char key:	Value of the key pressed
+ *     		int x:				Mouse pointer position.
+ *     		int y:				Mouse pointer position.
+ *
+ * OUTPUTS:
+ * 		none
+ *
+ * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 20.03.2017
+ **************************************************/
+static void keyboard(unsigned char key, int x, int y)
 {
 	switch (key)
 	{
@@ -68,7 +132,25 @@ void keyboard(unsigned char key, int x, int y)
 	}
 }
 
-void special_keyboard(int key, int x, int y)
+/**************************************************
+ * NAME: static void special_keyboard(int key, int x, int y)
+ *
+ * DESCRIPTION:
+ * 			This is the special keyboard function handed to glut. It handles
+ * 			special keypresses, e.g arrow keys, F1, F2...
+ *
+ * INPUTS:
+ *     	PARAMETERS:
+ *     		int key:			Value of the key pressed
+ *     		int x:				Mouse pointer position.
+ *     		int y:				Mouse pointer position.
+ *
+ * OUTPUTS:
+ * 		none
+ *
+ * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 20.03.2017
+ **************************************************/
+static void special_keyboard(int key, int x, int y)
 {
 	switch (key)
 	{
@@ -81,156 +163,43 @@ void special_keyboard(int key, int x, int y)
 	}
 }
 
-void close_func()
+/**************************************************
+ * NAME: static void close_func()
+ *
+ * DESCRIPTION:
+ * 			This function will run when the openGL window is closed. It sets
+ * 			the main loop condition to false, causing the program to finish.
+ *
+ * INPUTS:
+ *     	none
+ *
+ * OUTPUTS:
+ * 		none
+ *
+ * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 20.03.2017
+ **************************************************/
+static void close_func()
 {
 	(*boatData).programRunning = false;
 }
 
-void init(void)
-{
-	/*  select clearing (background) color       */
-	glClearColor(0.0, 119.0 / 255, 190.0 / 255, 0.0);
-
-	/*  initialize viewing values  */
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	glOrtho(-5.0, 5.0, -5.0, 5.0, -5.0, 5.0);
-}
-
-void loadObj(char fname[])
-{
-	FILE *fp;
-	fp = fopen(fname, "r");
-	if (!fp)
-	{
-		printf("can't open file: %s\n", fname);
-		exit(1);
-	}
-
-	int nV = 0;
-	//int nVT = 0;
-	int nVN = 0;
-	int nF = 0;
-
-	char firstWord[30];
-	while (!feof(fp))
-	{
-		fscanf(fp, "%s%*[^\n]", firstWord);	// reads only first word
-
-		if (strcmp(firstWord, "v") == 0)
-		{
-			nV++;
-		} /*else if (strcmp(firstWord, "vt") == 0)
-		 {
-		 nVT++;
-		 }*/else if (strcmp(firstWord, "vn") == 0)
-		{
-			nVN++;
-		} else if (strcmp(firstWord, "f") == 0)
-		{
-			nF++;
-		}
-	}
-	//printf("vertices: %d    faces: %d\n", nV, nF);
-	fclose(fp);
-	fp = fopen(fname, "r");
-	if (!fp)
-	{
-		printf("can't open file: %s\n", fname);
-		exit(1);
-	}
-
-	GLfloat vertices[nV][3];
-	//GLfloat textures[nVT][2];
-	GLfloat normals[nVN][3];
-
-	GLuint vertexIndices[3 * nF];
-	//GLuint uvIndices[3 * nF];
-	GLuint normalIndices[3 * nF];
-
-	int i = 0;
-	//int j = 0;
-	int k = 0;
-	int l = 0;
-
-	char lineHeader[20];
-	while (!feof(fp))
-	{
-		fscanf(fp, "%s", lineHeader);	// reads only first word
-		if (strcmp(lineHeader, "v") == 0)
-		{
-			float x, y, z;
-			int n = fscanf(fp, "%f %f %f", &x, &y, &z);
-			if (n == 3)
-			{
-				vertices[i][0] = x;
-				vertices[i][1] = y;
-				vertices[i++][2] = z;
-			}
-		} /*else if (strcmp(lineHeader, "vt") == 0)
-		 {
-		 float x, y;
-		 int n = fscanf(fp, "%f %f", &x, &y);
-		 if (n == 2)
-		 {
-		 textures[j][0] = x;
-		 textures[j++][1] = y;
-		 }
-		 } */else if (strcmp(lineHeader, "vn") == 0)
-		{
-			float x, y, z;
-			int n = fscanf(fp, "%f %f %f", &x, &y, &z);
-			if (n == 3)
-			{
-				normals[k][0] = x;
-				normals[k][1] = y;
-				normals[k++][2] = z;
-			}
-		} else if (strcmp(lineHeader, "f") == 0)
-		{
-			int a, b, c, d, e, f, g, h, i;
-			int n = fscanf(fp, "%d/%d/%d %d/%d/%d %d/%d/%d", &a, &b, &c, &d, &e, &f, &g, &h, &i);
-			if (n == 9)
-			{
-				vertexIndices[l] = a - 1;
-				//uvIndices[l] = b - 1;
-				normalIndices[l++] = c - 1;
-
-				vertexIndices[l] = d - 1;
-				//uvIndices[l] = e - 1;
-				normalIndices[l++] = f - 1;
-
-				vertexIndices[l] = g - 1;
-				//uvIndices[l] = h - 1;
-				normalIndices[l++] = i - 1;
-			}
-		}
-	}
-	fclose(fp);
-
-	speedboat = glGenLists(1);
-	glNewList(speedboat, GL_COMPILE);
-
-	glBegin(GL_TRIANGLES);
-
-	for (int m = 0; m < l; m++)
-	{
-		int normalIndex = normalIndices[m];
-		//int uvIndex = 2 * uvIndices[m];
-		int vertexIndex = vertexIndices[m];
-
-		glNormal3f(normals[normalIndex][0], normals[normalIndex][1], normals[normalIndex][2]);
-		//glTexCoord2f(textures[uvIndex], textures[uvIndex + 1]);
-		glVertex3f(vertices[vertexIndex][0], vertices[vertexIndex][1], vertices[vertexIndex][2]);
-	}
-
-	glEnd();
-
-	glEndList();
-
-}
-
-void setupLightning()
+/**************************************************
+ * NAME: static void setupLightning()
+ *
+ * DESCRIPTION:
+ * 			Sets up the lighting conditions. Standard openGL lighting is Gouraud shading
+ * 			which is fast but not the best looking alternative. The functions sets the
+ * 			light's position and color, and specifies the material's reflection parameters.
+ *
+ * INPUTS:
+ *     	none
+ *
+ * OUTPUTS:
+ * 		none
+ *
+ * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 20.03.2017
+ **************************************************/
+static void setupLightning()
 {
 
 	GLfloat light_position[] = { 5.0, 5.0, 3.0, 0.0 }; // OK: { 5.0, 5.0, -5.0, 0.0 }
@@ -258,6 +227,65 @@ void setupLightning()
 	glEnable(GL_DEPTH_TEST);
 }
 
+/**************************************************
+ * NAME: static void init(void)
+ *
+ * DESCRIPTION:
+ * 			Does some configuring that only needs to be done once before the program starts.
+ *
+ *
+ * INPUTS:
+ *     	none
+ *
+ * OUTPUTS:
+ * 		none
+ *
+ * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 20.03.2017
+ **************************************************/
+static void init(void)
+{
+	//  select clearing (background) color
+	glClearColor(0.0, 119.0 / 255, 190.0 / 255, 0.0);
+
+	//  initialize viewing values
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glOrtho(-5.0, 5.0, -5.0, 5.0, -5.0, 5.0);
+
+	setupLightning();
+
+	speedboat = load_obj("data/boat.obj");
+
+	// Create display list for setline
+	setline = glGenLists(1);
+	glNewList(setline, GL_COMPILE);
+	glTranslatef(0.0, -3.0, 0.0);
+	glColor3f(0.0, 1.0, 0.0);
+	glBegin(GL_POLYGON);
+	glVertex3f(-SETLINE_WIDTH, -SETLINE_HEIGHT, 4.0);
+	glVertex3f(SETLINE_WIDTH, -SETLINE_HEIGHT, 4.0);
+	glVertex3f(SETLINE_WIDTH, SETLINE_HEIGHT, 4.0);
+	glVertex3f(-SETLINE_WIDTH, SETLINE_HEIGHT, 4.0);
+	glEnd();
+	glEndList();
+}
+
+/**************************************************
+ * NAME: void *start_animation(void *void_ptr)
+ *
+ * DESCRIPTION:
+ * 			Starting point for the graphics. Initializes window with parameters,
+ * 			sets event handlers for keyboard, sets display function...
+ *
+ *
+ * INPUTS:
+ *     	void *void_ptr:		A pointer to the boat data from the current run
+ *
+ * OUTPUTS:
+ * 		none
+ *
+ * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 20.03.2017
+ **************************************************/
 void *start_animation(void *void_ptr)
 {
 	boatData = (Data*) void_ptr;
@@ -271,13 +299,11 @@ void *start_animation(void *void_ptr)
 	glutInitWindowSize(500, 400);
 	glutInitWindowPosition(50, 50);
 	glutCreateWindow("Dynamic Positioning");
+
 	init();
 
 	// Don't exit on window close, some things needs to be done afterwards e.g. plotting
 	glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_GLUTMAINLOOP_RETURNS);
-
-	loadObj("data/boat.obj");
-	setupLightning();
 
 	// Set glut functions
 	glutDisplayFunc(display);
@@ -288,6 +314,7 @@ void *start_animation(void *void_ptr)
 
 	// Start
 	glutMainLoop();
+
 	return NULL;
 }
 

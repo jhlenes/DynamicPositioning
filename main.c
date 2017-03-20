@@ -124,7 +124,7 @@ static void test_pid(void)
 	pthread_create(&printThread, NULL, printer_func, &boatData);
 
 	// Setup PID-controller
-	set_pid_coefficients(0.2, 0.15, -0.01);
+	set_pid_coefficients(2.0, 2.0, 0.01);
 	boatData.setPoint = 500;
 	set_pid_output_limits((float) MIN_OUTPUT, (float) MAX_OUTPUT);
 
@@ -142,13 +142,14 @@ static void test_pid(void)
 		// get exact time since last loop
 		unsigned long now = nano_time();
 		float dt = now - lastTime;
-		dt = FROM_NANOS(dt);
+		dt = from_nanos(dt);
+
 		lastTime = now;
 
 		float output = pid_compute(value);
-		value += (output - ((MAX_OUTPUT + MIN_OUTPUT) / 2.0)) * 30.0 * dt;
+		value += (output - ((MAX_OUTPUT + MIN_OUTPUT) / 2.0)) * 20.0 * dt;
 
-		float timePassed = FROM_NANOS((float ) (now - startTime));
+		float timePassed = from_nanos((float) (now - startTime));
 
 		boatData.sensorValue = value;
 		boatData.servoValue = output;
@@ -182,7 +183,6 @@ static void test_pid(void)
  **************************************************/
 int main(int argc, char *argv[])
 {
-
 	test_pid();
 	return 0;
 
@@ -228,7 +228,7 @@ int main(int argc, char *argv[])
 		set_servo_position((double) output);
 
 		// write data to file
-		float timePassed = FROM_NANOS((float ) (nano_time() - startTime));
+		float timePassed = from_nanos((float) (nano_time() - startTime));
 
 		boatData.sensorValue = sensorValue;
 		boatData.servoValue = output;

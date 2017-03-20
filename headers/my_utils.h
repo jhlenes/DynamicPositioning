@@ -1,10 +1,8 @@
 #ifndef HEADERS_MY_UTILS_H_
 #define HEADERS_MY_UTILS_H_
 
-// convert between seconds and nanoseconds
-#define FROM_NANOS(A) A/1000000000
-#define TO_NANOS(A)   A*1000000000
-
+float from_nanos(unsigned long nanos);
+unsigned long to_nanos(float secs);
 unsigned long nano_time(void);
 
 #endif /* HEADERS_MY_UTILS_H_ */

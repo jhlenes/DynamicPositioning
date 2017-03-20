@@ -1,91 +1,62 @@
-/*
+/**************************************************
  *
- *	Implements functions for connecting to phidgets,
- *	and closing existing connections.
+ * FILENAME:	phidget_connection.c
  *
- */
+ * DESCRIPTION:
+ * 			Implementation of several functions required to communicate with phidgets.
+ * 			The functions handles creation, reading and sending values, and closing the connections.
+ *
+ * PUBLIC FUNCTIONS:
+ * 			int connect_phidgets(void)
+ * 			int get_sensor_value(void)
+ * 			void set_servo_position(double)
+ * 			void close_connections(void)
+ *
+ * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 20.03.2017
+ *
+ **************************************************/
 
-#include "headers/phidget_connection.h"
+#include <stdio.h>
+#include <phidget21.h>
+#include "headers/responsive_analog_read.h"
 
-static CPhidgetInterfaceKitHandle kitHandle;	// Declare an InterfaceKit handle
-static CPhidgetServoHandle servoHandle;			// Declare a servo handle
+// Change this to the id of your sensor on the interface kit.
 static const int SENSOR_ID = 2;
 
-/*
- * Is called whenever a phidget is attached. Prints name and serial number to the console.
+// Handles for identifying the phidgets
+static CPhidgetInterfaceKitHandle kitHandle;
+static CPhidgetServoHandle servoHandle;
+
+/**************************************************
+ * NAME: static int setup_interface_kit_connection(void)
  *
- *  handle: a reference to the device
- *  userPtr:
+ * DESCRIPTION:
+ * 			Creates an interface kit object, opens the device for connections and waits for
+ * 			attachment.
  *
- *  returns: 0
- */
-int CCONV AttachHandler(CPhidgetHandle handle, void *userPtr)
-{
-	int serialNo;
-	const char *deviceName;
-
-	CPhidget_getDeviceName(handle, &deviceName);
-	CPhidget_getSerialNumber(handle, &serialNo);
-
-	printf("%s %10d attached!\n", deviceName, serialNo);
-
-	return 0;
-}
-
-/*
- * Is called whenever a phidget is detached. Prints name and serial number to the console.
+ * INPUTS:
+ * 		PARAMETERS:
+ *      	none
+ *     	EXTERNALS:
+ *      	CPhidgetInterfaceKitHandle kitHandle:	An empty handle which will be attached to a device.
  *
- *  handle: a reference to the device
- *  userPtr:
+ * OUTPUTS:
+ * 		PARAMETERS:
+ *      	none
+ *      EXTERNALS:
+ *      	CPhidgetInterfaceKitHandle kitHandle:	A handle with a registered phidget.
+ *     	RETURN:
+ *        	int:									0 if successful, 1 if failure.
  *
- *  returns: 0
- */
-int CCONV DetachHandler(CPhidgetHandle handle, void *userPtr)
-{
-	int serialNo;
-	const char *deviceName;
-
-	CPhidget_getDeviceName(handle, &deviceName);
-	CPhidget_getSerialNumber(handle, &serialNo);
-
-	printf("%s %10d detached!\n", deviceName, serialNo);
-
-	return 0;
-}
-
-/*
- * Is called whenever a phidget generates an error. Prints name and serial number to the console.
- *
- *  handle: a reference to the device
- *  userPtr:
- *
- *  returns: 0
- */
-int CCONV ErrorHandler(CPhidgetHandle handle, void *userPtr, int ErrorCode, const char *unknown)
-{
-	printf("Error handled. %d - %s", ErrorCode, unknown);
-	return 0;
-}
-
-/*
- *	Create an interface kit object, set up event handlers and open the phidget.
- *
- *  returns: 	0 if successful
- *  			1 if failed
- */
-int setup_interface_kit_connection()
+ * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 20.03.2017
+ **************************************************/
+static int setup_interface_kit_connection(void)
 {
 
 	// Create the InterfaceKit object
 	CPhidgetInterfaceKit_create(&kitHandle);
 
-	// Set the handlers to be run when the device is plugged in or opened from software, unplugged or closed from software,
-	// or generates an error.
-	CPhidget_set_OnAttach_Handler((CPhidgetHandle) kitHandle, AttachHandler, NULL);
-	CPhidget_set_OnDetach_Handler((CPhidgetHandle) kitHandle, DetachHandler, NULL);
-	CPhidget_set_OnError_Handler((CPhidgetHandle) kitHandle, ErrorHandler, NULL);
-
-	// Open the interfacekit for device connections, -1 opens any.
+	// Open the interfacekit for device connections, -1 opens any serial number available
 	CPhidget_open((CPhidgetHandle) kitHandle, -1);
 
 	// Get the program to wait for the interface kit device to be attached
@@ -101,24 +72,35 @@ int setup_interface_kit_connection()
 	return 0;
 }
 
-/*
- *	Create an servo motor object, set up event handlers and open the phidget.
+/**************************************************
+ * NAME: static int setup_servo_motor_connection(void)
  *
- *  returns: 	0 if successful
- *  			1 if failed
- */
-int setup_servo_motor_connection()
+ * DESCRIPTION:
+ * 			Creates a servo object, opens the device for connections and waits for
+ * 			attachment.
+ *
+ * INPUTS:
+ * 		PARAMETERS:
+ *      	none
+ *     	EXTERNALS:
+ *      	CPhidgetServoHandle servoHandle:	An empty handle which will be attached to a device.
+ *
+ * OUTPUTS:
+ * 		PARAMETERS:
+ *      	none
+ *      EXTERNALS:
+ *      	CPhidgetServoHandle kitHandle:		A handle with a registered phidget.
+ *     	RETURN:
+ *        	int:								0 if successful, 1 if failure.
+ *
+ * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 20.03.2017
+ **************************************************/
+static int setup_servo_motor_connection(void)
 {
 	// Create the servo object
 	CPhidgetServo_create(&servoHandle);
 
-	// Set the handlers to be run when the device is plugged in or opened from software, unplugged or closed from software,
-	// or generates an error.
-	CPhidget_set_OnAttach_Handler((CPhidgetHandle) servoHandle, AttachHandler, NULL);
-	CPhidget_set_OnDetach_Handler((CPhidgetHandle) servoHandle, DetachHandler, NULL);
-	CPhidget_set_OnError_Handler((CPhidgetHandle) servoHandle, ErrorHandler, NULL);
-
-	// Open the servoHandle for device connections, -1 opens any
+	// Open the servoHandle for device connections, -1 opens any serial number available
 	CPhidget_open((CPhidgetHandle) servoHandle, -1);
 
 	// Get the program to wait for an servoHandle device to be attached
@@ -134,12 +116,29 @@ int setup_servo_motor_connection()
 	return 0;
 }
 
-/*
- *	Sets up the interface kit and servo motor
+/**************************************************
+ * NAME: int connect_phidgets(void)
  *
- *  returns: 	0 if successful
- *  			1 if failed
- */
+ * DESCRIPTION:
+ * 			Connects to both the interface kit and servo by calling the private
+ * 			function setup_interface_kit_connection and setup_servo_motor_connection.
+ *
+ * INPUTS:
+ * 		PARAMETERS:
+ *      	none
+ *     	EXTERNALS:
+ *      	none
+ *
+ * OUTPUTS:
+ * 		PARAMETERS:
+ *      	none
+ *      EXTERNALS:
+ *      	none
+ *     	RETURN:
+ *        	int:		0 if successful, 1 if failure.
+ *
+ * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 20.03.2017
+ **************************************************/
 int connect_phidgets(void)
 {
 	// Setup a connection to the phidgets we are going to use
@@ -150,11 +149,29 @@ int connect_phidgets(void)
 	return 0;
 }
 
-/*
- * Gets the sensor value from the interface kit
+/**************************************************
+ * NAME: int get_sensor_value(void)
  *
- * 	returns:	the sensor value (0-1000)
- */
+ * DESCRIPTION:
+ * 			Gets the current sensor value from the interface kit.
+ *
+ * INPUTS:
+ * 		PARAMETERS:
+ *      	none
+ *     	EXTERNALS:
+ *     		CPhidgetInterfaceKitHandle kitHandle:	A handle with a registered interface kit.
+ *
+ *
+ * OUTPUTS:
+ * 		PARAMETERS:
+ *      	none
+ *      EXTERNALS:
+ *      	none
+ *     	RETURN:
+ *        	int:		The sensor value (0-1000).
+ *
+ * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 20.03.2017
+ **************************************************/
 int get_sensor_value(void)
 {
 	int sensorValue;
@@ -165,34 +182,59 @@ int get_sensor_value(void)
 	return sensorValue;
 }
 
-/*
- * Gets the minimum position and maximum position of the servo
- */
-void get_servo_min_max(double *min, double *max)
-{
-	CPhidgetServo_getPositionMin(servoHandle, 0, min);
-	CPhidgetServo_getPositionMax(servoHandle, 0, max);
-	return;
-}
-
-/*
- * Sets the servo position
- */
+/**************************************************
+ * NAME: void set_servo_position(double position)
+ *
+ * DESCRIPTION:
+ * 			Sets the position of the servo motor.
+ *
+ * INPUTS:
+ * 		PARAMETERS:
+ *      	none
+ *     	EXTERNALS:
+ *     		CPhidgetServoHandle servoHandle:	A handle with a registered servo motor.
+ *
+ *
+ * OUTPUTS:
+ * 		PARAMETERS:
+ *      	none
+ *      EXTERNALS:
+ *      	none
+ *     	RETURN:
+ *        	none
+ *
+ * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 20.03.2017
+ **************************************************/
 void set_servo_position(double position)
 {
 	CPhidgetServo_setPosition(servoHandle, 0, position);
 	return;
 }
 
-void get_servo_position(double *position)
-{
-	CPhidgetServo_getPosition(servoHandle, 0, position);
-	return;
-}
-
-/*
- * Closes the connections to the phidgets
- */
+/**************************************************
+ * NAME: void close_connections(void)
+ *
+ * DESCRIPTION:
+ * 			Closes the connection to the phidgets.
+ *
+ * INPUTS:
+ * 		PARAMETERS:
+ *      	none
+ *     	EXTERNALS:
+ *     		CPhidgetServoHandle servoHandle:		A handle with a registered servo motor.
+ *     		CPhidgetInterfaceKitHandle kitHandle:	A handle with a registered interface kit.
+ *
+ *
+ * OUTPUTS:
+ * 		PARAMETERS:
+ *      	none
+ *      EXTERNALS:
+ *      	none
+ *     	RETURN:
+ *        	none
+ *
+ * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 20.03.2017
+ **************************************************/
 void close_connections(void)
 {
 	CPhidget_close((CPhidgetHandle) kitHandle);

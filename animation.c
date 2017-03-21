@@ -10,7 +10,7 @@
  * PUBLIC FUNCTIONS:
  * 			void *start_animation(void*)
  *
- * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 20.03.2017
+ * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 21.03.2017
  *
  **************************************************/
 
@@ -18,6 +18,7 @@
 
 #include "headers/main.h"
 #include "headers/obj_loader.h"
+#include "headers/pid_controller.h"
 
 #define SETLINE_WIDTH 0.03
 #define SETLINE_HEIGHT 1.4
@@ -45,7 +46,7 @@ static GLuint setline;
  * OUTPUTS:
  * 		none
  *
- * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 20.03.2017
+ * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 21.03.2017
  **************************************************/
 static void display(void)
 {
@@ -53,15 +54,18 @@ static void display(void)
 	// sensor: left-right: 480 - 206
 	float boatX = -(float) (*boatData).sensorValue / 1000 * 10.0 + 5.0;
 	float setPointX = -(float) (*boatData).setPoint / 1000 * 10.0 + 5.0;
-	float arrowX = -((*boatData).servoValue - 94.0) / 10.0 * 4.0 - 2.0;
-	float arrowColor = 1 + ((*boatData).servoValue - 94.0) / 10.0;
+	float arrowX = ((*boatData).servoValue - (float) MAX_OUTPUT)
+			/ ((float) MIN_OUTPUT - (float) MAX_OUTPUT) * 4.0 - 2.0;
+	float arrowColor = 1
+			- ((*boatData).servoValue - (float) MAX_OUTPUT)
+					/ ((float) MIN_OUTPUT - (float) MAX_OUTPUT);
 
 	// clear screen
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glMatrixMode(GL_MODELVIEW);
 
-	// Draw speed vector
+	// Draw arrow depicting power ouput
 	glLoadIdentity();
 	glTranslatef(-0.5, 0.0, 0.0);
 	glColor3f(1.0, arrowColor, arrowColor);
@@ -74,10 +78,7 @@ static void display(void)
 	glBegin(GL_TRIANGLES);
 	glVertex3f(arrowX, -0.5, 0.0);
 	glVertex3f(arrowX + 1.0, 0.5, 0.0);
-	glVertex3f(arrowX, 0.5, 0.0);
 	glVertex3f(arrowX, 1.5, 0.0);
-	glVertex3f(arrowX + 1.0, 0.5, 0.0);
-	glVertex3f(arrowX, 0.5, 0.0);
 	glEnd();
 	glColor3f(0.0, 0.0, 0.0);
 	glLineWidth(2.0);
@@ -156,9 +157,15 @@ static void special_keyboard(int key, int x, int y)
 	{
 	case GLUT_KEY_LEFT:
 		(*boatData).setPoint += 5.0;
+		if ((*boatData).setPoint > 1000)
+			(*boatData).setPoint = 1000;
+		set_pid_setpoint((*boatData).setPoint);
 		break;
 	case GLUT_KEY_RIGHT:
 		(*boatData).setPoint -= 5.0;
+		if ((*boatData).setPoint < 0)
+			(*boatData).setPoint = 0;
+		set_pid_setpoint((*boatData).setPoint);
 		break;
 	}
 }

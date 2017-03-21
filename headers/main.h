@@ -3,6 +3,9 @@
 
 #include <stdbool.h>
 
+#define MIN_OUTPUT 101
+#define MAX_OUTPUT 107
+
 typedef struct
 {
 	float servoValue;

@@ -13,7 +13,7 @@
  * 			void set_pid_setpoint(float value)
  * 			void set_pid_ouput_limits(float min, float max)
  *
- * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 20.03.2017
+ * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 21.03.2017
  *
  **************************************************/
 
@@ -49,7 +49,7 @@ static float outMin, outMax;
  *     	RETURN:
  *        	float:					The controller output to be applied in order to regulate the process.
  *
- * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 20.03.2017
+ * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 21.03.2017
  **************************************************/
 float pid_compute(float input)
 {
@@ -64,8 +64,7 @@ float pid_compute(float input)
 	unsigned long timeNow = nano_time();
 
 	// time difference
-	float dt = (float) (timeNow - lastTime);
-	dt = from_nanos(dt);	// Convert to seconds
+	float dt = from_nanos(timeNow - lastTime);	// Convert to seconds
 
 	// Calculate the terms
 	float error = setpoint - input;

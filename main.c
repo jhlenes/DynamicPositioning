@@ -10,7 +10,7 @@
  *
  * PUBLIC FUNCTIONS:
  *
- * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 20.03.2017
+ * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 21.03.2017
  *
  **************************************************/
 /*
@@ -35,8 +35,6 @@
 #include "headers/main.h"
 
 // Output limits for the PID, based on testing
-#define MIN_OUTPUT 84
-#define MAX_OUTPUT 94
 
 // Found by testing
 #define TANK_WIDTH 280
@@ -45,6 +43,40 @@
 static const struct timespec LOOP_DELAY = { 0, 10000000L };		// 0.01 seconds
 static const struct timespec PRINT_DELAY = { 0, 100000000L };	// 0.1 second
 
+/**************************************************
+ * NAME: static void plot()
+ *
+ * DESCRIPTION:
+ * 			Plots data from output.dat in gnuplot. The data consists
+ * 			of position, setpoint and power plotted against time.
+ *
+ * INPUTS:
+ * 		none
+ *
+ * OUTPUTS:
+ * 		none
+ *
+ * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 21.03.2017
+ **************************************************/
+static void plot()
+{
+	// plot in gnuplot
+	FILE *gnuplot = popen("gnuplot --persist", "w");
+	fprintf(gnuplot, "set yrange [0:1000]\n"
+			"set y2range [0:%f]\n"
+			"set ytics autofreq nomirror tc lt 1\n"
+			"set ylabel 'position' tc lt 1\n"
+			"set y2tics autofreq nomirror tc lt 2\n"
+			"set y2label 'power' tc lt 2\n", (MAX_OUTPUT - MIN_OUTPUT) * 1.5);
+	fprintf(gnuplot, "plot \"output.dat\" u 1:2 w linespoints t \"position\" linetype 1, "
+			"\"output.dat\" u 1:4 w lines t \"setpoint\" linetype 1, "
+			"\"output.dat\" u 1:3 w lines t \"power\" linetype 2 axes x1y2\n");
+
+	/*fprintf(gnuplot, "plot \"output.dat\" u 1:2 w lines t \"position\", "
+	 "\"output.dat\" u 1:4 w lines t \"setpoint\"\n");
+	 pclose(gnuplot);*/
+	pclose(gnuplot);
+}
 /**************************************************
  * NAME: static void *printer_func(void *void_ptr)
  *
@@ -60,7 +92,7 @@ static const struct timespec PRINT_DELAY = { 0, 100000000L };	// 0.1 second
  * OUTPUTS:
  * 		none
  *
- * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 20.03.2017
+ * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 21.03.2017
  **************************************************/
 static void *printer_func(void *void_ptr)
 {
@@ -81,17 +113,12 @@ static void *printer_func(void *void_ptr)
 
 		// Write to file
 		fprintf(fp, " \t%8.3f\t%8.3f\t%8.3f\t%8.3f\n", (*boatData).timePassed,
-				(*boatData).sensorValue, (*boatData).servoValue, (*boatData).setPoint);
+				(*boatData).sensorValue, -((*boatData).servoValue - (float) MAX_OUTPUT),
+				(*boatData).setPoint);
 	}
 
 	// close file
 	fclose(fp);
-
-	// plot in gnuplot
-	FILE *gnuplot = popen("gnuplot --persist", "w");
-	fprintf(gnuplot, "plot \"output.dat\" u 1:2 w lines t \"Posisjon\", "
-			"\"output.dat\" u 1:4 w lines t \"Set point\"\n");
-	pclose(gnuplot);
 
 	return NULL;
 }
@@ -108,7 +135,7 @@ static void *printer_func(void *void_ptr)
  * OUTPUTS:
  * 		none
  *
- * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 20.03.2017
+ * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 21.03.2017
  **************************************************/
 static void test_pid(void)
 {
@@ -126,6 +153,7 @@ static void test_pid(void)
 	// Setup PID-controller
 	set_pid_coefficients(2.0, 2.0, 0.01);
 	boatData.setPoint = 500;
+	set_pid_setpoint(boatData.setPoint);
 	set_pid_output_limits((float) MIN_OUTPUT, (float) MAX_OUTPUT);
 
 	// time handling
@@ -137,19 +165,16 @@ static void test_pid(void)
 	{
 		nanosleep(&LOOP_DELAY, NULL); // sleep
 
-		set_pid_setpoint(boatData.setPoint);
-
 		// get exact time since last loop
 		unsigned long now = nano_time();
-		float dt = now - lastTime;
-		dt = from_nanos(dt);
+		float dt = from_nanos(now - lastTime);
 
 		lastTime = now;
 
 		float output = pid_compute(value);
 		value += (output - ((MAX_OUTPUT + MIN_OUTPUT) / 2.0)) * 20.0 * dt;
 
-		float timePassed = from_nanos((float) (now - startTime));
+		float timePassed = from_nanos(now - startTime);
 
 		boatData.sensorValue = value;
 		boatData.servoValue = output;
@@ -158,6 +183,10 @@ static void test_pid(void)
 
 	pthread_join(animationThread, NULL);
 	pthread_join(printThread, NULL);
+
+	// plot results
+	plot();
+
 }
 
 /**************************************************
@@ -183,6 +212,7 @@ static void test_pid(void)
  **************************************************/
 int main(int argc, char *argv[])
 {
+	//plot();
 	test_pid();
 	return 0;
 
@@ -199,11 +229,15 @@ int main(int argc, char *argv[])
 	pthread_t printThread;
 	pthread_create(&printThread, NULL, printer_func, &boatData);
 
-	// setup PID-controller {0.4, 0.4, 1.8}
-	set_pid_coefficients(0.4, 0.4, 1.8); //
+	/* Tuning PID-controller
+	 *  MAX: 94 , MIN: 84 , {0.4, 0.4, 1.8}
+	 * 	MAX: 107, MIN: 101, {0.3, 0.3, 0.2}
+	 */
+	set_pid_coefficients(0.3, 0.3, 0.01);
 
-	// initialize setPoint to current location
+	// initialize setPoint to middle of tank
 	boatData.setPoint = (float) get_sensor_value() - TANK_WIDTH / 2.0;
+	set_pid_setpoint(boatData.setPoint);
 
 	// set output bounds
 	set_pid_output_limits((float) MIN_OUTPUT, (float) MAX_OUTPUT); // TODO: Figure out what values work here
@@ -216,8 +250,6 @@ int main(int argc, char *argv[])
 		// sleep
 		nanosleep(&LOOP_DELAY, NULL);
 
-		set_pid_setpoint(boatData.setPoint);
-
 		// read position
 		float sensorValue = (float) get_sensor_value();
 
@@ -228,7 +260,7 @@ int main(int argc, char *argv[])
 		set_servo_position((double) output);
 
 		// write data to file
-		float timePassed = from_nanos((float) (nano_time() - startTime));
+		float timePassed = from_nanos(nano_time() - startTime);
 
 		boatData.sensorValue = sensorValue;
 		boatData.servoValue = output;
@@ -241,6 +273,9 @@ int main(int argc, char *argv[])
 	// Join threads
 	pthread_join(animationThread, NULL);
 	pthread_join(printThread, NULL);
+
+	// plot results
+	plot();
 
 	return 0;
 }

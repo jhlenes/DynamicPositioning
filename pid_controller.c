@@ -19,17 +19,19 @@
 
 #include <stdio.h>
 #include "headers/my_utils.h"
+#include "headers/pid_controller.h"
 
 // PID coefficients
-static float Kp, Ki, Kd;
-
-static float setpoint;
-
-// Restrictions on the output
-static float outMin, outMax;
+#define Kp 0.06
+#define Ki 0.1
+#define Kd 0.02 // Prøv 0.02 for 0.02s, og 0.01 for 0.01s
+/* Tuning PID-controller
+ *  MAX: 94 , MIN: 84 , {0.4, 0.4, 1.8}
+ * 	MAX: 107, MIN: 101, {0.15, 0.2, 0.07}, BEST: {0.06, 0.1, 0.09}
+ */
 
 /**************************************************
- * NAME: float pid_compute(float input)
+ * NAME: float pid_compute(float input, float setpoint)
  *
  * DESCRIPTION:
  * 			Applies the PID-regulator control loop algorithm.
@@ -37,26 +39,21 @@ static float outMin, outMax;
  *
  * INPUTS:
  * 		PARAMETERS:
-*      		float input:			The input value to regulate.
- *     	EXTERNALS:
- *      	float Kp, Ki, Kd:		The PID coefficients.
- *			float setpoint:			The setpoint to follow.
- *			float outMin, outMax:	Ouput bounds for regulator.
+ *      	float input:			The input value to regulate.
+ *      	float setpoint:			The setpoint to follow.
  *
  * OUTPUTS:
- * 		PARAMETERS:
- *      	none
  *     	RETURN:
  *        	float:					The controller output to be applied in order to regulate the process.
  *
- * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 21.03.2017
+ * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 01.04.2017
  **************************************************/
-float pid_compute(float input)
+float pid_compute(float input, float setpoint)
 {
 	// static variables are initialized only once
 	static unsigned long lastTime = 0;
 	static float lastInput = 0;
-	static float integralTerm = 0.0;
+	static float integralTerm = MAX_OUTPUT;
 
 	if (lastTime == 0)
 		lastTime = nano_time();
@@ -72,10 +69,10 @@ float pid_compute(float input)
 	integralTerm += Ki * error * dt;
 
 	// ensure value is in bounds
-	if (integralTerm > outMax)
-		integralTerm = outMax;
-	else if (integralTerm < outMin)
-		integralTerm = outMin;
+	if (integralTerm > MAX_OUTPUT)
+		integralTerm = MAX_OUTPUT;
+	else if (integralTerm < MIN_OUTPUT)
+		integralTerm = MIN_OUTPUT;
 
 	// by using change in input instead of change in error,
 	// we get no output spikes when the set point changes
@@ -84,10 +81,10 @@ float pid_compute(float input)
 	float output = Kp * error + integralTerm - Kd * dInput;
 
 	// ensure output is in bounds
-	if (output > outMax)
-		output = outMax;
-	else if (output < outMin)
-		output = outMin;
+	if (output > MAX_OUTPUT)
+		output = MAX_OUTPUT;
+	else if (output < MIN_OUTPUT)
+		output = MIN_OUTPUT;
 
 	// remember some variables for next iteration
 	lastInput = input;
@@ -95,93 +92,3 @@ float pid_compute(float input)
 
 	return output;
 }
-
-/**************************************************
- * NAME: void set_pid_coefficients(float P, float I, float D)
- *
- * DESCRIPTION:
- * 			Sets the PID-controller coefficients. Needs to be set before running
- * 			pid_compute.
- *
- * INPUTS:
- * 		PARAMETERS:
-*      		float P, I, D:			The new PID coefficients.
- *     	EXTERNALS:
- *      	float Kp, Ki, Kd:		The actual PID coefficients.
- *
- * OUTPUTS:
- * 		PARAMETERS:
- *      	none
- *      EXTERNALS:
- *      	float Kp, Ki, Kd:		The updated PID coefficients
- *     	RETURN:
- *        	none
- *
- * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 20.03.2017
- **************************************************/
-void set_pid_coefficients(float P, float I, float D)
-{
-	Kp = P;
-	Ki = I;
-	Kd = D;
-}
-
-/**************************************************
- * NAME: void set_pid_setpoint(float value)
- *
- * DESCRIPTION:
- * 			Updates the setpoint which the regulator regulates after.
- * 			Needs to be set before running pid_compute.
- *
- * INPUTS:
- * 		PARAMETERS:
-*      		float value:			The new setpoint.
- *     	EXTERNALS:
- *      	float setpoint:			The actual setpoint.
- *
- * OUTPUTS:
- * 		PARAMETERS:
- *      	none
- *      EXTERNALS:
- *      	float setpoint:			The updated setpoint.
- *     	RETURN:
- *        	none
- *
- * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 20.03.2017
- **************************************************/
-void set_pid_setpoint(float value)
-{
-	setpoint = value;
-}
-
-/**************************************************
- * NAME: void set_pid_output_limits(float min, float max)
- *
- * DESCRIPTION:
- * 			Sets the ouput limits which the regulator stays inside.
- * 			Needs to be set before running pid_compute.
- *
- * INPUTS:
- * 		PARAMETERS:
-*      		float min, max:			The new output limits.
- *     	EXTERNALS:
- *      	float outMin, outMax:	The actual ouput limits.
- *
- * OUTPUTS:
- * 		PARAMETERS:
- *      	none
- *      EXTERNALS:
- *      	float outMin, outMax:	The updated ouput limits.
- *     	RETURN:
- *        	none
- *
- * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 20.03.2017
- **************************************************/
-void set_pid_output_limits(float min, float max)
-{
-	if (min > max)
-		return;
-	outMin = min;
-	outMax = max;
-}
-

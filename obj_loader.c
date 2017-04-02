@@ -162,7 +162,7 @@ GLuint load_obj(char fname[])
 	glTranslatef(0.0, -3.5, 0.0);
 	glRotatef(90, 0.0, 1.0, 0.0);
 	glRotatef(15, 0.0, 0.0, 1.0);
-	glScalef(0.2, 0.2, 0.2);
+	glScalef(0.14, 0.14, 0.14);
 	glBegin(GL_TRIANGLES);
 	for (int m = 0; m < l; m++)
 	{

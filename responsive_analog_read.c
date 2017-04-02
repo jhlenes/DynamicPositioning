@@ -25,7 +25,7 @@
 static const int ANALOG_RESOLUTION = 1000;
 
 // value between 0 and 1 that controls how smooth the output is
-static const float SMOOTHNESS_MULTIPLIER = 0.3;
+static const float SMOOTHNESS_MULTIPLIER = 0.01;
 
 /**************************************************
  * NAME: static float smoothness_cruve(float diff)

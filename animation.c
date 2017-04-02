@@ -20,55 +20,45 @@
 #include "headers/obj_loader.h"
 #include "headers/pid_controller.h"
 
-#define SETLINE_WIDTH 0.03
+// Constants for used for drawing
+#define WINDOW_WIDTH 10.0
+#define BOAT_WIDTH 3.5
+#define SETLINE_WIDTH 0.02
 #define SETLINE_HEIGHT 1.4
-#define KEY_ENTER 13
 
-static Data *boatData;
+#define KEY_ENTER 13
+#define SETPOINT_INCREMENT 2.5
+
+static BoatData *boatData;
 
 // OpenGL display list id
 static GLuint speedboat;
 static GLuint setline;
 
 /**************************************************
- * NAME: static void display(void)
+ * NAME: static void drawPowerArrow(float arrowColor, float arrowX)
  *
  * DESCRIPTION:
- * 			This function display stuff on the screen. It will run over and over
- * 			handling the graphics.
+ * 			Draws an arrow depicting the power ouput from the boat.
  *
  * INPUTS:
- *     	EXTERNALS:
- *      	Data *boatData:		A struct containing data from the current run.
- *      	GLuint speedboat:	ID for the speedboat display list.
- *      	GLuint setline:		ID for the setline display list.
- *
+ * 		EXTERNALS:
+ * 			BoatData *boatData:		A collection of data for the boat
  * OUTPUTS:
  * 		none
  *
- * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 21.03.2017
+ * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 02.04.2017
  **************************************************/
-static void display(void)
+static void drawPowerArrow(void)
 {
-	// Update variables
-	// sensor: left-right: 480 - 206
-	float boatX = -(float) (*boatData).sensorValue / 1000 * 10.0 + 5.0;
-	float setPointX = -(float) (*boatData).setPoint / 1000 * 10.0 + 5.0;
-	float arrowX = ((*boatData).servoValue - (float) MAX_OUTPUT)
-			/ ((float) MIN_OUTPUT - (float) MAX_OUTPUT) * 4.0 - 2.0;
-	float arrowColor = 1
-			- ((*boatData).servoValue - (float) MAX_OUTPUT)
-					/ ((float) MIN_OUTPUT - (float) MAX_OUTPUT);
+	// Calculate position and color of arrow based on the magnitude
+	float arrowX = ((*boatData).servoValue - MAX_OUTPUT) / ( MIN_OUTPUT - MAX_OUTPUT) * 4.0 - 2.0;
+	float arrowColor = 0.9
+			* (1 - ((*boatData).servoValue - MAX_OUTPUT) / (MIN_OUTPUT - MAX_OUTPUT));
 
-	// clear screen
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	glMatrixMode(GL_MODELVIEW);
-
-	// Draw arrow depicting power ouput
 	glLoadIdentity();
 	glTranslatef(-0.5, 0.0, 0.0);
-	glColor3f(1.0, arrowColor, arrowColor);
+	glColor3f(1.0, arrowColor, arrowColor * 0.6);	// simple color mapping
 	glBegin(GL_QUADS);
 	glVertex3f(-2.0, 1.0, 0.0);
 	glVertex3f(-2.0, 0.0, 0.0);
@@ -87,20 +77,58 @@ static void display(void)
 	glVertex3f(-2.0, -0.5, 0.0);
 	glVertex3f(3.0, -0.5, 0.0);
 	glVertex3f(3.0, 1.5, 0.0);
-
 	glEnd();
+}
 
-	// Draw boat
+/**************************************************
+ * NAME: static void display(void)
+ *
+ * DESCRIPTION:
+ * 			This function display stuff on the screen. It will run over and over
+ * 			handling the graphics.
+ *
+ * INPUTS:
+ *     	EXTERNALS:
+ *      	Data *boatData:		A struct containing data from the current run.
+ *      	GLuint speedboat:	ID for the speedboat display list.
+ *      	GLuint setline:		ID for the setline display list.
+ *
+ * OUTPUTS:
+ * 		none
+ *
+ * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 02.04.2017
+ **************************************************/
+static void display(void)
+{
+	// Convert from our values to window coordinates
+	static const float TO_WINDOW_COORDS = -(WINDOW_WIDTH - BOAT_WIDTH) / TANK_WIDTH;
+
+	// Calculate the updated positions for the boat and setpoint
+	float boatX = ((*boatData).sensorValue - (*boatData).startpoint + TANK_WIDTH / 2.0)
+			* TO_WINDOW_COORDS;
+	float setpointX = ((*boatData).setpoint - (*boatData).startpoint + TANK_WIDTH / 2.0)
+			* TO_WINDOW_COORDS;
+
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glMatrixMode(GL_MODELVIEW);
+
+	// Draw the boat
 	glLoadIdentity();
 	glEnable(GL_LIGHTING);
 	glTranslatef(boatX, 0.0, 0.0);
 	glCallList(speedboat);
 
-	// Draw setline
+	// Draw the setline
 	glLoadIdentity();
 	glDisable(GL_LIGHTING);
-	glTranslatef(setPointX, 0.0, 0.0);
+	if (abs((*boatData).setpoint - (*boatData).sensorValue) < 5)
+		glColor3f(0.0, 1.0, 0.0);
+	else
+		glColor3f(1.0, 0.0, 0.0);
+	glTranslatef(setpointX, 0.0, 0.0);
 	glCallList(setline);
+
+	drawPowerArrow();
 
 	glFlush();
 }
@@ -128,7 +156,7 @@ static void keyboard(unsigned char key, int x, int y)
 	switch (key)
 	{
 	case KEY_ENTER:
-		glutLeaveMainLoop();
+		glutLeaveMainLoop();	// Terminate program
 		break;
 	}
 }
@@ -145,27 +173,27 @@ static void keyboard(unsigned char key, int x, int y)
  *     		int key:			Value of the key pressed
  *     		int x:				Mouse pointer position.
  *     		int y:				Mouse pointer position.
+ *		EXTERNALS:
+ * 			BoatData *boatData:		A struct containing data from the current run.
  *
  * OUTPUTS:
  * 		none
  *
- * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 20.03.2017
+ * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 01.04.2017
  **************************************************/
 static void special_keyboard(int key, int x, int y)
 {
 	switch (key)
 	{
 	case GLUT_KEY_LEFT:
-		(*boatData).setPoint += 5.0;
-		if ((*boatData).setPoint > 1000)
-			(*boatData).setPoint = 1000;
-		set_pid_setpoint((*boatData).setPoint);
+		(*boatData).setpoint += SETPOINT_INCREMENT;
+		if ((*boatData).setpoint > (*boatData).startpoint)
+			(*boatData).setpoint = (*boatData).startpoint;
 		break;
 	case GLUT_KEY_RIGHT:
-		(*boatData).setPoint -= 5.0;
-		if ((*boatData).setPoint < 0)
-			(*boatData).setPoint = 0;
-		set_pid_setpoint((*boatData).setPoint);
+		(*boatData).setpoint -= SETPOINT_INCREMENT;
+		if ((*boatData).setpoint < (*boatData).startpoint - TANK_WIDTH)
+			(*boatData).setpoint = (*boatData).startpoint - TANK_WIDTH;
 		break;
 	}
 }
@@ -178,7 +206,8 @@ static void special_keyboard(int key, int x, int y)
  * 			the main loop condition to false, causing the program to finish.
  *
  * INPUTS:
- *     	none
+ *     	EXTERNALS:
+ * 			BoatData *boatData:		A struct containing data from the current run.
  *
  * OUTPUTS:
  * 		none
@@ -240,7 +269,6 @@ static void setupLightning()
  * DESCRIPTION:
  * 			Does some configuring that only needs to be done once before the program starts.
  *
- *
  * INPUTS:
  *     	none
  *
@@ -261,13 +289,13 @@ static void init(void)
 
 	setupLightning();
 
+	// Get a display list for the boat
 	speedboat = load_obj("data/boat.obj");
 
 	// Create display list for setline
 	setline = glGenLists(1);
 	glNewList(setline, GL_COMPILE);
 	glTranslatef(0.0, -3.0, 0.0);
-	glColor3f(0.0, 1.0, 0.0);
 	glBegin(GL_POLYGON);
 	glVertex3f(-SETLINE_WIDTH, -SETLINE_HEIGHT, 4.0);
 	glVertex3f(SETLINE_WIDTH, -SETLINE_HEIGHT, 4.0);
@@ -295,7 +323,7 @@ static void init(void)
  **************************************************/
 void *start_animation(void *void_ptr)
 {
-	boatData = (Data*) void_ptr;
+	boatData = (BoatData*) void_ptr;
 
 	// No input args supported
 	int argc = 0;
@@ -303,7 +331,7 @@ void *start_animation(void *void_ptr)
 	glutInit(&argc, argv);
 
 	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB | GLUT_DEPTH);
-	glutInitWindowSize(500, 400);
+	glutInitWindowSize(750, 550);
 	glutInitWindowPosition(50, 50);
 	glutCreateWindow("Dynamic Positioning");
 

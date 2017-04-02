@@ -3,16 +3,16 @@
 
 #include <stdbool.h>
 
-#define MIN_OUTPUT 101
-#define MAX_OUTPUT 107
+#define TANK_WIDTH 280.0
 
 typedef struct
 {
 	float servoValue;
 	float sensorValue;
-	float setPoint;
+	float setpoint;
 	float timePassed;
+	float startpoint;
 	_Bool programRunning;
-} Data;
+} BoatData;
 
 #endif /* HEADERS_MAIN_H_ */

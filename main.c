@@ -59,18 +59,29 @@ static void plot(char *filename)
 
 	// Configure
 	fprintf(gnuplot, "set ytics autofreq nomirror tc lt 1\n"
+			"set xlabel 'time [s]'\n"
 			"set ylabel 'position' tc lt 1\n"
 			"set y2range [0:%f]\n"
 			"set y2tics autofreq nomirror tc lt 2\n"
 			"set y2label 'power' tc lt 2\n", (MAX_OUTPUT - MIN_OUTPUT) * 1.33);
 
-	// Plot
+	// Plot power output, position and setpoint
 	fprintf(gnuplot, "plot \"%s\" u 1:3 w lines t \"power\" linetype 2 axes x1y2, "
 			"\"%s\" u 1:2 w lines t \"position\" linetype 1, "
 			"\"%s\" u 1:4 w lines t \"setpoint\" linetype 1 dashtype 2 \n", filename, filename,
 			filename);
 
 	pclose(gnuplot);
+	FILE *gnuplot2 = popen("gnuplot --persist", "w");
+
+	// New plot for the PID terms
+	fprintf(gnuplot2, "set xlabel 'time [s]\n"
+			"plot \"%s\" u 1:3 w lines t \"power\" dashtype 2, "
+			"\"%s\" u 1:5 w lines t \"P-term\", "
+			"\"%s\" u 1:6 w lines t \"I-term\", "
+			"\"%s\" u 1:7 w lines t \"D-term\"\n", filename, filename, filename, filename);
+
+	pclose(gnuplot2);
 }
 /**************************************************
  * NAME: static void *printer_func(void *void_ptr)
@@ -97,7 +108,8 @@ static void *printer_func(void *void_ptr)
 
 	// File header
 	fprintf(fp, "# This file contains the data from running the dynamic positioning program.\n"
-			"#\t%8s\t%8s\t%8s\t%8s\n", "time[s]", "sensor", "output", "setpoint");
+			"#\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\n", "time[s]", "sensor", "output", "setpoint",
+			"P-term", "I-term", "D-term");
 
 	while ((*data).programRunning)
 	{
@@ -108,8 +120,10 @@ static void *printer_func(void *void_ptr)
 				(*data).sensorValue, (*data).servoValue);
 
 		// Write to file
-		fprintf(fp, " \t%8.3f\t%8.3f\t%8.3f\t%8.3f\n", (*data).timePassed, (*data).sensorValue,
-				-((*data).servoValue - (float) MAX_OUTPUT), (*data).setpoint);
+		fprintf(fp, " \t%8.3f\t%8.3f\t%8.3f\t%8.3f\t%8.3f\t%8.3f\t%8.3f\n", (*data).timePassed,
+				(*data).sensorValue,
+				MAX_OUTPUT - (*data).servoValue, (*data).setpoint, (*data).pid.Pterm,
+				MAX_OUTPUT - (*data).pid.Iterm, (*data).pid.Dterm);
 	}
 
 	fclose(fp);
@@ -133,7 +147,7 @@ static void *printer_func(void *void_ptr)
 static void test_pid(void)
 {
 
-	BoatData boatData = { 0.0, 0.0, 0.0, 0.0, 0.0, true };
+	BoatData boatData = { .programRunning = true };	// omitted fields are initialized to default values
 
 	// Start animation
 	pthread_t animationThread;
@@ -160,14 +174,15 @@ static void test_pid(void)
 
 		lastTime = now;
 
-		float output = pid_compute(value, boatData.setpoint);
-		value += (output - ((MAX_OUTPUT + MIN_OUTPUT) / 2.0 + 1.0)) * 35.0 * dt;
+		PIDdata pid = pid_compute(value, boatData.setpoint);
+		value += (pid.output - ((MAX_OUTPUT + MIN_OUTPUT) / 2.0 + 1.0)) * 35.0 * dt;
 
 		float timePassed = from_nanos(now - startTime);
 
 		boatData.sensorValue = value;
-		boatData.servoValue = output;
+		boatData.servoValue = pid.output;
 		boatData.timePassed = timePassed;
+		boatData.pid = pid;
 	}
 
 	pthread_join(animationThread, NULL);
@@ -196,14 +211,14 @@ static void test_pid(void)
 int main()
 {
 	//plot("../../DPresults/pid.dat");
-	//plot("output.dat");
-	test_pid();
+	plot("output.dat");
+	//	test_pid();
 	return 0;
 
 	if (connect_phidgets())
 		return 1;	// Could not connect
 
-	BoatData boatData = { 0.0, 0.0, 0.0, 0.0, 0.0, true };
+	BoatData boatData = { .programRunning = true };	// omitted fields are initialized to default values
 
 	// Start animation
 	pthread_t animationThread;
@@ -230,16 +245,16 @@ int main()
 		float sensorValue = (float) get_sensor_value();
 
 		// calculate new servo position
-		float output = pid_compute(sensorValue, boatData.setpoint);
+		PIDdata pid = pid_compute(sensorValue, boatData.setpoint);
 
 		// set the new servo position
-		set_servo_position((double) output);
+		set_servo_position((double) pid.output);
 
 		float timePassed = from_nanos(nano_time() - startTime);
 
 		// update the data
 		boatData.sensorValue = sensorValue;
-		boatData.servoValue = output;
+		boatData.servoValue = pid.output;
 		boatData.timePassed = timePassed;
 	}
 

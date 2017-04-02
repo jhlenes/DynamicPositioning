@@ -4,7 +4,15 @@
 #define MIN_OUTPUT 101.0
 #define MAX_OUTPUT 107.0
 
-float pid_compute(float input, float setpoint);
+typedef struct
+{
+	float output;
+	float Pterm;
+	float Iterm;
+	float Dterm;
+} PIDdata;
+
+PIDdata pid_compute(float input, float setpoint);
 
 #endif /* PID_CONTROLLER_H_ */
 

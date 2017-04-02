@@ -48,7 +48,7 @@
  *
  * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 01.04.2017
  **************************************************/
-float pid_compute(float input, float setpoint)
+PIDdata pid_compute(float input, float setpoint)
 {
 	// static variables are initialized only once
 	static unsigned long lastTime = 0;
@@ -78,7 +78,9 @@ float pid_compute(float input, float setpoint)
 	// we get no output spikes when the set point changes
 	float dInput = (input - lastInput) / dt;
 
-	float output = Kp * error + integralTerm - Kd * dInput;
+	float Pterm = Kp * error;
+	float Dterm = -Kd * dInput;
+	float output = Pterm + integralTerm + Dterm;
 
 	// ensure output is in bounds
 	if (output > MAX_OUTPUT)
@@ -90,5 +92,7 @@ float pid_compute(float input, float setpoint)
 	lastInput = input;
 	lastTime = timeNow;
 
-	return output;
+	PIDdata res = {output, Pterm, integralTerm, Dterm};
+
+	return res;
 }

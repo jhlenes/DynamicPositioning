@@ -8,8 +8,6 @@
  * 			the servo motor to counter unwanted changes. It also handles printing values
  * 			to the screen and starts up a new thread which visualizes the boat and handles input.
  *
- * PUBLIC FUNCTIONS:
- *
  * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 21.03.2017
  *
  **************************************************/
@@ -31,7 +29,6 @@
 #include "headers/my_utils.h"
 #include "headers/phidget_connection.h"
 #include "headers/animation.h"
-#include "headers/pid_controller.h"
 #include "headers/main.h"
 
 // Delays determining how often to perform some actions
@@ -42,8 +39,8 @@ static const struct timespec PRINT_DELAY = { 0, 100000000L };	// 0.1 second
  * NAME: static void plot(char *filename)
  *
  * DESCRIPTION:
- * 			Plots data in gnuplot. The data consists
- * 			of position, setpoint and power plotted against time.
+ * 			Plots data in gnuplot. The data consists of position, setpoint,
+ * 			power and the terms of the PID-regulator plotted against time.
  *
  * INPUTS:
  * 		char *filename:		The file containing the data to be plotted
@@ -57,7 +54,7 @@ static void plot(char *filename)
 {
 	FILE *gnuplot = popen("gnuplot --persist", "w");
 
-	// Configure
+	// Configuration
 	fprintf(gnuplot, "set ytics autofreq nomirror tc lt 1\n"
 			"set xlabel 'time [s]'\n"
 			"set ylabel 'position' tc lt 1\n"
@@ -192,15 +189,14 @@ static void test_pid(void)
 }
 
 /**************************************************
- * NAME: int main(int argc, char *argv[])
+ * NAME: int main(void)
  *
  * DESCRIPTION:
  * 			The main method. Sets up a connection to phidgets, starts threads for
  * 			animation and printing, and starts the dynamic positioning control loop.
  *
  * INPUTS:
- *     	EXTERNALS:
- *      	LOOP_DELAY:			The delay between each loop
+ *     	none
  *
  * OUTPUTS:
  *		RETURNS:
@@ -211,8 +207,8 @@ static void test_pid(void)
 int main()
 {
 	//plot("../../DPresults/pid.dat");
-	plot("output.dat");
-	//	test_pid();
+	//plot("output.dat");
+	test_pid();
 	return 0;
 
 	if (connect_phidgets())
@@ -233,12 +229,10 @@ int main()
 	// Initialize setpoint to middle of the tank
 	boatData.setpoint = (float) get_sensor_value() - TANK_WIDTH / 2.0;
 
-	unsigned long startTime = nano_time();
-
 	// main loop
+	unsigned long startTime = nano_time();
 	while (boatData.programRunning)
 	{
-		// sleep
 		nanosleep(&LOOP_DELAY, NULL);
 
 		// read position

@@ -38,12 +38,8 @@ static const float SMOOTHNESS_MULTIPLIER = 0.01;
  * INPUTS:
  * 		PARAMETERS:
  *      	float diff:		The difference in last two sensor values.
- *     	EXTERNALS:
- *      	none
  *
  * OUTPUTS:
- * 		PARAMETERS:
- *      	none
  *     	RETURN:
  *        	float:			A smoothness factor in the range 0 to 1.
  *
@@ -68,12 +64,8 @@ static float smoothness_curve(float diff)
  * INPUTS:
  * 		PARAMETERS:
  *      	float newValue:		The new value which will be smoothed.
- *      EXTERNALS:
- *      	none
  *
  * OUTPUTS:
- * 		PARAMETERS:
- *      	none
  *     	RETURN:
  *        	int:				The smoothed value.
  *

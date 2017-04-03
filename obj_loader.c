@@ -3,7 +3,8 @@
  * FILENAME:	obj_loader.c
  *
  * DESCRIPTION:
- * 			Contains a method for loading wavefront .obj files.
+ * 			Contains a method for loading wavefront .obj files into OpenGL
+ * 			compatible display lists.
  *
  *
  * PUBLIC FUNCTIONS:
@@ -49,10 +50,10 @@ GLuint load_obj(char fname[])
 	}
 
 	// Count occurrences of the different data types
-	int nV = 0;
-	//int nVT = 0;
-	int nVN = 0;
-	int nF = 0;
+	int nV = 0;		// number of vertices
+	int nVT = 0;	// number of vertex textures
+	int nVN = 0;	// number of vertex normals
+	int nF = 0;		// number of faces/triangles
 	char firstWord[30];
 	while (!feof(fp))
 	{
@@ -61,10 +62,10 @@ GLuint load_obj(char fname[])
 		if (strcmp(firstWord, "v") == 0)
 		{
 			nV++;
-		} /*else if (strcmp(firstWord, "vt") == 0)
+		} else if (strcmp(firstWord, "vt") == 0)
 		{
 			nVT++;
-		}*/ else if (strcmp(firstWord, "vn") == 0)
+		} else if (strcmp(firstWord, "vn") == 0)
 		{
 			nVN++;
 		} else if (strcmp(firstWord, "f") == 0)
@@ -85,25 +86,25 @@ GLuint load_obj(char fname[])
 
 	// Arrays to store data in
 	GLfloat vertices[nV][3];
-	//GLfloat textures[nVT][2];
+	GLfloat textures[nVT][2];
 	GLfloat normals[nVN][3];
+
 	GLuint vertexIndices[3 * nF];
-	//GLuint textureIndices[3 * nF];
+	GLuint textureIndices[3 * nF];
 	GLuint normalIndices[3 * nF];
 
 	// Counter variables
 	int i = 0;
-	//int j = 0;
+	int j = 0;
 	int k = 0;
 	int l = 0;
 
-	// The following code is based on the file format specification of .obj files.
-	// See https://en.wikipedia.org/wiki/Wavefront_.obj_file for good explanation.
+	// Extract data from file
 	char lineHeader[20];
 	while (!feof(fp))
 	{
 		fscanf(fp, "%s", lineHeader);	// reads only first word
-		if (strcmp(lineHeader, "v") == 0)
+		if (strcmp(lineHeader, "v") == 0)	// if vertex
 		{
 			float x, y, z;
 			int n = fscanf(fp, "%f %f %f", &x, &y, &z);
@@ -113,7 +114,7 @@ GLuint load_obj(char fname[])
 				vertices[i][1] = y;
 				vertices[i++][2] = z;
 			}
-		} /*else if (strcmp(lineHeader, "vt") == 0)
+		} else if (strcmp(lineHeader, "vt") == 0)	// if vertex texture
 		{
 			float x, y;
 			int n = fscanf(fp, "%f %f", &x, &y);
@@ -122,7 +123,7 @@ GLuint load_obj(char fname[])
 				textures[j][0] = x;
 				textures[j++][1] = y;
 			}
-		}*/ else if (strcmp(lineHeader, "vn") == 0)
+		} else if (strcmp(lineHeader, "vn") == 0)	// if vertex normal
 		{
 			float x, y, z;
 			int n = fscanf(fp, "%f %f %f", &x, &y, &z);
@@ -132,22 +133,23 @@ GLuint load_obj(char fname[])
 				normals[k][1] = y;
 				normals[k++][2] = z;
 			}
-		} else if (strcmp(lineHeader, "f") == 0)
+		} else if (strcmp(lineHeader, "f") == 0)	// if face
 		{
 			int a, b, c, d, e, f, g, h, i;
 			int n = fscanf(fp, "%d/%d/%d %d/%d/%d %d/%d/%d", &a, &b, &c, &d, &e, &f, &g, &h, &i);
 			if (n == 9)
 			{
+				// OpenGL is 0-indexed, thus -1
 				vertexIndices[l] = a - 1;
-				//textureIndices[l] = b - 1;
+				textureIndices[l] = b - 1;
 				normalIndices[l++] = c - 1;
 
 				vertexIndices[l] = d - 1;
-				//textureIndices[l] = e - 1;
+				textureIndices[l] = e - 1;
 				normalIndices[l++] = f - 1;
 
 				vertexIndices[l] = g - 1;
-				//textureIndices[l] = h - 1;
+				textureIndices[l] = h - 1;
 				normalIndices[l++] = i - 1;
 			}
 		}
@@ -159,19 +161,21 @@ GLuint load_obj(char fname[])
 	GLuint objDisplayList = glGenLists(1);
 	glNewList(objDisplayList, GL_COMPILE);
 
+	// Do some transformations
 	glTranslatef(0.0, -3.5, 0.0);
 	glRotatef(90, 0.0, 1.0, 0.0);
 	glRotatef(15, 0.0, 0.0, 1.0);
 	glScalef(0.14, 0.14, 0.14);
+
 	glBegin(GL_TRIANGLES);
 	for (int m = 0; m < l; m++)
 	{
 		int normalIndex = normalIndices[m];
-		//int textureIndex = 2 * textureIndices[m];
+		int textureIndex = 2 * textureIndices[m];
 		int vertexIndex = vertexIndices[m];
 
 		glNormal3f(normals[normalIndex][0], normals[normalIndex][1], normals[normalIndex][2]);
-		//glTexCoord2f(textures[textureIndex], textures[textureIndex + 1]);	// Couldn't find the texture, so this is useless
+		glTexCoord2f(textures[textureIndex][0], textures[textureIndex][1]);
 		glVertex3f(vertices[vertexIndex][0], vertices[vertexIndex][1], vertices[vertexIndex][2]);
 	}
 	glEnd();

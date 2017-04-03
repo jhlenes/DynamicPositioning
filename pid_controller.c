@@ -3,15 +3,10 @@
  * FILENAME:	pid_controller.c
  *
  * DESCRIPTION:
- * 			Implementation of a PID-controller. You must call the functions
- * 			set_pid_parameters, set_pid_set_point and set_pid_output_limits before
- * 			using the pid_compute function.
+ * 			Implementation of a PID-controller.
  *
  * PUBLIC FUNCTIONS:
- * 			float pid_compute(float input)
- * 			void set_pid_coefficients(float P, float I, float D)
- * 			void set_pid_setpoint(float value)
- * 			void set_pid_ouput_limits(float min, float max)
+ * 			PIDdata pid_compute(float input, float setpoint)
  *
  * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 21.03.2017
  *
@@ -31,7 +26,7 @@
  */
 
 /**************************************************
- * NAME: float pid_compute(float input, float setpoint)
+ * NAME: PIDdata pid_compute(float input, float setpoint)
  *
  * DESCRIPTION:
  * 			Applies the PID-regulator control loop algorithm.
@@ -44,13 +39,13 @@
  *
  * OUTPUTS:
  *     	RETURN:
- *        	float:					The controller output to be applied in order to regulate the process.
+ *        	PIDdata:				The power to be applied in order to regulate the process. In addition,
+ *        							every term of the power is also returned
  *
  * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 01.04.2017
  **************************************************/
 PIDdata pid_compute(float input, float setpoint)
 {
-	// static variables are initialized only once
 	static unsigned long lastTime = 0;
 	static float lastInput = 0;
 	static float integralTerm = MAX_OUTPUT;
@@ -60,10 +55,9 @@ PIDdata pid_compute(float input, float setpoint)
 
 	unsigned long timeNow = nano_time();
 
-	// time difference
-	float dt = from_nanos(timeNow - lastTime);	// Convert to seconds
+	// time difference in seconds
+	float dt = from_nanos(timeNow - lastTime);
 
-	// Calculate the terms
 	float error = setpoint - input;
 
 	integralTerm += Ki * error * dt;
@@ -92,7 +86,7 @@ PIDdata pid_compute(float input, float setpoint)
 	lastInput = input;
 	lastTime = timeNow;
 
-	PIDdata res = {output, Pterm, integralTerm, Dterm};
+	PIDdata res = { output, Pterm, integralTerm, Dterm };
 
 	return res;
 }

@@ -3,14 +3,14 @@
  * FILENAME:	animation.c
  *
  * DESCRIPTION:
- * 			This file contains implementations for graphics based on OpenGL.
- * 			It also handles keyboard events.
+ * 			This file contains everything related to graphics. The graphics
+ * 			are based on OpenGL. This file also handles keyboard events.
  *
  *
  * PUBLIC FUNCTIONS:
  * 			void *start_animation(void*)
  *
- * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 21.03.2017
+ * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 03.04.2017
  *
  **************************************************/
 
@@ -29,14 +29,15 @@
 #define KEY_ENTER 13
 #define SETPOINT_INCREMENT 2.5
 
+// Data from the current run
 static BoatData *boatData;
 
-// OpenGL display list id
+// OpenGL display list ids
 static GLuint speedboat;
 static GLuint setline;
 
 /**************************************************
- * NAME: static void drawPowerArrow(float arrowColor, float arrowX)
+ * NAME: static void drawPowerArrow(void)
  *
  * DESCRIPTION:
  * 			Draws an arrow depicting the power ouput from the boat.
@@ -59,20 +60,20 @@ static void drawPowerArrow(void)
 	glLoadIdentity();
 	glTranslatef(-0.5, 0.0, 0.0);
 	glColor3f(1.0, arrowColor, arrowColor * 0.6);	// simple color mapping
-	glBegin(GL_QUADS);
+	glBegin(GL_QUADS);		// main body of arrow
 	glVertex3f(-2.0, 1.0, 0.0);
 	glVertex3f(-2.0, 0.0, 0.0);
 	glVertex3f(arrowX, 0.0, 0.0);
 	glVertex3f(arrowX, 1.0, 0.0);
 	glEnd();
-	glBegin(GL_TRIANGLES);
+	glBegin(GL_TRIANGLES);	// arrowhead
 	glVertex3f(arrowX, -0.5, 0.0);
 	glVertex3f(arrowX + 1.0, 0.5, 0.0);
 	glVertex3f(arrowX, 1.5, 0.0);
 	glEnd();
 	glColor3f(0.0, 0.0, 0.0);
 	glLineWidth(2.0);
-	glBegin(GL_LINE_LOOP);
+	glBegin(GL_LINE_LOOP);	// surrounding rectangle
 	glVertex3f(-2.0, 1.5, 0.0);
 	glVertex3f(-2.0, -0.5, 0.0);
 	glVertex3f(3.0, -0.5, 0.0);
@@ -109,6 +110,7 @@ static void display(void)
 	float setpointX = ((*boatData).setpoint - (*boatData).startpoint + TANK_WIDTH / 2.0)
 			* TO_WINDOW_COORDS;
 
+	// Clear window and select the modelview matrix
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glMatrixMode(GL_MODELVIEW);
 
@@ -121,7 +123,7 @@ static void display(void)
 	// Draw the setline
 	glLoadIdentity();
 	glDisable(GL_LIGHTING);
-	if (abs((*boatData).setpoint - (*boatData).sensorValue) < 5)
+	if (abs((*boatData).setpoint - (*boatData).sensorValue) < 5)// Green line when on the setpoint, else red
 		glColor3f(0.0, 1.0, 0.0);
 	else
 		glColor3f(1.0, 0.0, 0.0);
@@ -220,7 +222,7 @@ static void close_func()
 }
 
 /**************************************************
- * NAME: static void setupLightning()
+ * NAME: static void setupLighting()
  *
  * DESCRIPTION:
  * 			Sets up the lighting conditions. Standard openGL lighting is Gouraud shading
@@ -235,23 +237,19 @@ static void close_func()
  *
  * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 20.03.2017
  **************************************************/
-static void setupLightning()
+static void setupLighting()
 {
 
-	GLfloat light_position[] = { 5.0, 5.0, 3.0, 0.0 }; // OK: { 5.0, 5.0, -5.0, 0.0 }
+	GLfloat light_position[] = { 5.0, 5.0, 3.0, 0.0 };
 
-	//GLfloat ambient[] = { 0.1, 0.1, 0.1, 1.0 };
 	GLfloat diffuse[] = { 0.8, 0.8, 0.8, 1.0 };
-	//GLfloat specular[] = { 0.1, 0.1, 0.1, 1.0 };
 	GLfloat shininess[] = { 0.0 };
 
 	GLfloat mat[] = { 1.0, 0.2, 0.2, 1.0 };
 	glShadeModel(GL_SMOOTH);
 
 	glLightfv(GL_LIGHT0, GL_POSITION, light_position);
-	//glLightfv(GL_LIGHT0, GL_AMBIENT, ambient);
 	glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse);
-	//glLightfv(GL_LIGHT0, GL_SPECULAR, specular);
 
 	glMaterialfv(GL_FRONT, GL_AMBIENT, mat);
 	glMaterialfv(GL_FRONT, GL_DIFFUSE, mat);
@@ -287,7 +285,7 @@ static void init(void)
 	glLoadIdentity();
 	glOrtho(-5.0, 5.0, -5.0, 5.0, -5.0, 5.0);
 
-	setupLightning();
+	setupLighting();
 
 	// Get a display list for the boat
 	speedboat = load_obj("data/boat.obj");
@@ -311,7 +309,6 @@ static void init(void)
  * DESCRIPTION:
  * 			Starting point for the graphics. Initializes window with parameters,
  * 			sets event handlers for keyboard, sets display function...
- *
  *
  * INPUTS:
  *     	void *void_ptr:		A pointer to the boat data from the current run

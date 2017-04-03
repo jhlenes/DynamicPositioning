@@ -35,14 +35,10 @@ static CPhidgetServoHandle servoHandle;
  * 			attachment.
  *
  * INPUTS:
- * 		PARAMETERS:
- *      	none
  *     	EXTERNALS:
  *      	CPhidgetInterfaceKitHandle kitHandle:	An empty handle which will be attached to a device.
  *
  * OUTPUTS:
- * 		PARAMETERS:
- *      	none
  *      EXTERNALS:
  *      	CPhidgetInterfaceKitHandle kitHandle:	A handle with a registered phidget.
  *     	RETURN:
@@ -80,14 +76,10 @@ static int setup_interface_kit_connection(void)
  * 			attachment.
  *
  * INPUTS:
- * 		PARAMETERS:
- *      	none
  *     	EXTERNALS:
  *      	CPhidgetServoHandle servoHandle:	An empty handle which will be attached to a device.
  *
  * OUTPUTS:
- * 		PARAMETERS:
- *      	none
  *      EXTERNALS:
  *      	CPhidgetServoHandle kitHandle:		A handle with a registered phidget.
  *     	RETURN:
@@ -124,16 +116,9 @@ static int setup_servo_motor_connection(void)
  * 			function setup_interface_kit_connection and setup_servo_motor_connection.
  *
  * INPUTS:
- * 		PARAMETERS:
- *      	none
- *     	EXTERNALS:
- *      	none
+ * 		none
  *
  * OUTPUTS:
- * 		PARAMETERS:
- *      	none
- *      EXTERNALS:
- *      	none
  *     	RETURN:
  *        	int:		0 if successful, 1 if failure.
  *
@@ -156,17 +141,11 @@ int connect_phidgets(void)
  * 			Gets the current sensor value from the interface kit.
  *
  * INPUTS:
- * 		PARAMETERS:
- *      	none
  *     	EXTERNALS:
  *     		CPhidgetInterfaceKitHandle kitHandle:	A handle with a registered interface kit.
  *
  *
  * OUTPUTS:
- * 		PARAMETERS:
- *      	none
- *      EXTERNALS:
- *      	none
  *     	RETURN:
  *        	int:		The sensor value (0-1000).
  *
@@ -189,19 +168,12 @@ int get_sensor_value(void)
  * 			Sets the position of the servo motor.
  *
  * INPUTS:
- * 		PARAMETERS:
- *      	none
  *     	EXTERNALS:
  *     		CPhidgetServoHandle servoHandle:	A handle with a registered servo motor.
  *
  *
  * OUTPUTS:
- * 		PARAMETERS:
- *      	none
- *      EXTERNALS:
- *      	none
- *     	RETURN:
- *        	none
+ * 		none
  *
  * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 20.03.2017
  **************************************************/
@@ -218,20 +190,13 @@ void set_servo_position(double position)
  * 			Closes the connection to the phidgets.
  *
  * INPUTS:
- * 		PARAMETERS:
- *      	none
  *     	EXTERNALS:
  *     		CPhidgetServoHandle servoHandle:		A handle with a registered servo motor.
  *     		CPhidgetInterfaceKitHandle kitHandle:	A handle with a registered interface kit.
  *
  *
  * OUTPUTS:
- * 		PARAMETERS:
- *      	none
- *      EXTERNALS:
- *      	none
- *     	RETURN:
- *        	none
+ * 		none
  *
  * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 20.03.2017
  **************************************************/

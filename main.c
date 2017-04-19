@@ -32,7 +32,7 @@
 #include "headers/main.h"
 
 // Delays determining how often to perform some actions
-static const struct timespec LOOP_DELAY = { 0, 20000000L };	// 0.02 seconds
+static const struct timespec LOOP_DELAY = { 0,  20000000L };	// 0.02 seconds
 static const struct timespec PRINT_DELAY = { 0, 100000000L };	// 0.1 second
 
 /**************************************************
@@ -58,6 +58,7 @@ static void plot(char *filename)
 	fprintf(gnuplot, "set ytics autofreq nomirror tc lt 1\n"
 			"set xlabel 'time [s]'\n"
 			"set ylabel 'position' tc lt 1\n"
+			"set yrange [0:1000]\n"
 			"set y2range [0:%f]\n"
 			"set y2tics autofreq nomirror tc lt 2\n"
 			"set y2label 'power' tc lt 2\n", (MAX_OUTPUT - MIN_OUTPUT) * 1.33);
@@ -113,14 +114,14 @@ static void *printer_func(void *void_ptr)
 		nanosleep(&PRINT_DELAY, NULL);
 
 		// Print to screen
-		printf("setpoint: %5.1f sensorValue: %5.1f servoValue: %5.1f\n", (*data).setpoint,
-				(*data).sensorValue, (*data).servoValue);
+		printf("setpoint: %5.1f sensorValue: %5.1f servoValue: %5.1f\n", 1000.0 - (*data).setpoint,
+				1000.0 - (*data).sensorValue, (*data).servoValue);
 
 		// Write to file
 		fprintf(fp, " \t%8.3f\t%8.3f\t%8.3f\t%8.3f\t%8.3f\t%8.3f\t%8.3f\n", (*data).timePassed,
-				(*data).sensorValue,
-				MAX_OUTPUT - (*data).servoValue, (*data).setpoint, (*data).pid.Pterm,
-				MAX_OUTPUT - (*data).pid.Iterm, (*data).pid.Dterm);
+				1000.0 - (*data).sensorValue,
+				MAX_OUTPUT - (*data).servoValue, 1000.0 - (*data).setpoint, -(*data).pid.Pterm,
+				MAX_OUTPUT - (*data).pid.Iterm, -(*data).pid.Dterm);
 	}
 
 	fclose(fp);
@@ -206,10 +207,10 @@ static void test_pid(void)
  **************************************************/
 int main()
 {
-	//plot("../../DPresults/pid.dat");
+	//plot("../../DPresults/PID2_5.dat");
 	//plot("output.dat");
-	test_pid();
-	return 0;
+	//test_pid();
+	//return 0;
 
 	if (connect_phidgets())
 		return 1;	// Could not connect
@@ -227,7 +228,7 @@ int main()
 	boatData.startpoint = (float) get_sensor_value();
 
 	// Initialize setpoint to middle of the tank
-	boatData.setpoint = (float) get_sensor_value() - TANK_WIDTH / 2.0;
+	boatData.setpoint = get_sensor_value() - (int) (TANK_WIDTH / 3);
 
 	// main loop
 	unsigned long startTime = nano_time();
@@ -250,6 +251,7 @@ int main()
 		boatData.sensorValue = sensorValue;
 		boatData.servoValue = pid.output;
 		boatData.timePassed = timePassed;
+		boatData.pid = pid;
 	}
 
 	set_servo_position(0.0);			// turn off motor

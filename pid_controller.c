@@ -15,15 +15,30 @@
 #include <stdio.h>
 #include "headers/my_utils.h"
 #include "headers/pid_controller.h"
+#include "headers/responsive_analog_read.h"
 
 // PID coefficients
-#define Kp 0.06
-#define Ki 0.1
-#define Kd 0.02 // Prøv 0.02 for 0.02s, og 0.01 for 0.01s
+#define Kp 0.059
+#define Ki 0.050
+#define Kd 0.035 // 0.059, 0.050, 0.035
+
+#define N 10
+
 /* Tuning PID-controller
  *  MAX: 94 , MIN: 84 , {0.4, 0.4, 1.8}
  * 	MAX: 107, MIN: 101, {0.15, 0.2, 0.07}, BEST: {0.06, 0.1, 0.09}
  */
+
+static float average(float array[])
+{
+	float sum = 0.0;
+	for (int j = 0; j < N; j++)
+	{
+		float value = array[j];
+		sum += value;
+	}
+	return sum / N;
+}
 
 /**************************************************
  * NAME: PIDdata pid_compute(float input, float setpoint)
@@ -46,12 +61,16 @@
  **************************************************/
 PIDdata pid_compute(float input, float setpoint)
 {
-	static unsigned long lastTime = 0;
+	static unsigned long lastTime = 0UL;
 	static float lastInput = 0;
 	static float integralTerm = MAX_OUTPUT;
+	static float dTerms[N];
+	static int i = 0;
 
-	if (lastTime == 0)
+	if (lastTime == 0UL) {
 		lastTime = nano_time();
+		lastInput = input;
+	}
 
 	unsigned long timeNow = nano_time();
 
@@ -73,7 +92,9 @@ PIDdata pid_compute(float input, float setpoint)
 	float dInput = (input - lastInput) / dt;
 
 	float Pterm = Kp * error;
-	float Dterm = -Kd * dInput;
+	dTerms[i++] = -Kd * dInput;
+	if (i >= N) i = 0;
+	float Dterm = average(dTerms);
 	float output = Pterm + integralTerm + Dterm;
 
 	// ensure output is in bounds

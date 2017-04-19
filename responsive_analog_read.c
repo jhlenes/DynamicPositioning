@@ -25,7 +25,7 @@
 static const int ANALOG_RESOLUTION = 1000;
 
 // value between 0 and 1 that controls how smooth the output is
-static const float SMOOTHNESS_MULTIPLIER = 0.01;
+static const float SMOOTHNESS_MULTIPLIER = 0.02;
 
 /**************************************************
  * NAME: static float smoothness_cruve(float diff)
@@ -71,10 +71,9 @@ static float smoothness_curve(float diff)
  *
  * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 20.03.2017
  **************************************************/
-int responsive_analog_read(int newValue)
+int responsive_analog_read(float newValue)
 {
-	// the output value, it contains the history of the values
-	static float smoothValue = 0;
+	static float smoothValue = 0.0;
 
 	float diff = abs(newValue - smoothValue);
 

@@ -27,7 +27,7 @@
 #define SETLINE_HEIGHT 1.4
 
 #define KEY_ENTER 13
-#define SETPOINT_INCREMENT 2.5
+#define SETPOINT_INCREMENT 3
 
 // Data from the current run
 static BoatData *boatData;

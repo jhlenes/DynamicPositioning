@@ -26,10 +26,10 @@
 #include <stdio.h>
 #include <pthread.h>
 
-#include "headers/my_utils.h"
 #include "headers/phidget_connection.h"
-#include "headers/animation.h"
 #include "headers/main.h"
+#include "headers/time_utils.h"
+#include "headers/visualization.h"
 
 // Delays determining how often to perform some actions
 static const struct timespec LOOP_DELAY = { 0,  20000000L };	// 0.02 seconds
@@ -58,7 +58,7 @@ static void plot(char *filename)
 	fprintf(gnuplot, "set ytics autofreq nomirror tc lt 1\n"
 			"set xlabel 'time [s]'\n"
 			"set ylabel 'position' tc lt 1\n"
-			"set yrange [0:1000]\n"
+			//"set yrange [700:1000]\n"
 			"set y2range [0:%f]\n"
 			"set y2tics autofreq nomirror tc lt 2\n"
 			"set y2label 'power' tc lt 2\n", (MAX_OUTPUT - MIN_OUTPUT) * 1.33);
@@ -207,10 +207,10 @@ static void test_pid(void)
  **************************************************/
 int main()
 {
-	//plot("../../DPresults/PID2_5.dat");
+	//plot("../../DPresults/PID2_6.dat");
 	//plot("output.dat");
-	//test_pid();
-	//return 0;
+	test_pid();
+	return 0;
 
 	if (connect_phidgets())
 		return 1;	// Could not connect

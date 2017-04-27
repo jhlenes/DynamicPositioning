@@ -1,46 +1,42 @@
 /**************************************************
- *
  * FILENAME:	obj_loader.c
  *
  * DESCRIPTION:
- * 			Contains a method for loading wavefront .obj files into OpenGL
- * 			compatible display lists.
- *
+ * 		Contains a function for loading wavefront .obj files into OpenGL.
  *
  * PUBLIC FUNCTIONS:
- * 				GLuint load_obj(char fname[])
+ * 		GLuint load_obj(char fname[])
  *
  * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 20.03.2017
- *
  **************************************************/
 
-#include <string.h>
+#include <GL/gl.h>
 #include <stdio.h>
-#include <GL/freeglut.h>
+#include <stdlib.h>
+#include <string.h>
 
 /**************************************************
  * NAME: GLuint load_obj(char fname[])
  *
  * DESCRIPTION:
- * 			Loads the data from a wavefront .obj file into OpenGl compatible format.
- * 			The steps taken to extract the data is based on the thorough explanation of
- * 			the file format here: https://en.wikipedia.org/wiki/Wavefront_.obj_file.
- * 			An .obj file is a geometry definition file format, it is used by several
- * 			3D graphics application vendors.
+ * 		Loads the data from a wavefront .obj file into OpenGl compatible format.
+ * 		An .obj file is a geometry definition file format containing vertices,
+ * 		normals, texture coordinates and faces. Description of the file format can
+ * 		be found here: https://en.wikipedia.org/wiki/Wavefront_.obj_file#File_format
  *
  * INPUTS:
  * 		PARAMETERS:
  *      	char fname[]:	The file name to extract the data from.
  *
  * OUTPUTS:
- *     	RETURN:
- *        	GLuint:			A reference to a openGL display list containing the model from the .obj file.
+ *     	RETURNS:
+ *        	GLuint:	A reference to a openGL display list containing the model from the .obj file.
  *
  * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 20.03.2017
  **************************************************/
 GLuint load_obj(char fname[])
 {
-	// Open file
+	// open file
 	FILE *fp;
 	fp = fopen(fname, "r");
 	if (!fp)
@@ -54,6 +50,7 @@ GLuint load_obj(char fname[])
 	int nVT = 0;	// number of vertex textures
 	int nVN = 0;	// number of vertex normals
 	int nF = 0;		// number of faces/triangles
+
 	char firstWord[30];
 	while (!feof(fp))
 	{
@@ -73,10 +70,10 @@ GLuint load_obj(char fname[])
 			nF++;
 		}
 	}
-	fclose(fp);	// Close file
+	fclose(fp);
 
-	// Open file again, we need to read from the start now that
-	// we know how many occurrences of each data type
+	// open file again, we need to read from the start now that
+	// we know how many occurrences there are of each data type.
 	fp = fopen(fname, "r");
 	if (!fp)
 	{
@@ -84,26 +81,24 @@ GLuint load_obj(char fname[])
 		exit(1);
 	}
 
-	// Arrays to store data in
+	// arrays to store data in
 	GLfloat vertices[nV][3];
 	GLfloat textures[nVT][2];
 	GLfloat normals[nVN][3];
-
 	GLuint vertexIndices[3 * nF];
 	GLuint textureIndices[3 * nF];
 	GLuint normalIndices[3 * nF];
 
-	// Counter variables
+	// counter variables
 	int i = 0;
 	int j = 0;
 	int k = 0;
 	int l = 0;
 
-	// Extract data from file
 	char lineHeader[20];
 	while (!feof(fp))
 	{
-		fscanf(fp, "%s", lineHeader);	// reads only first word
+		fscanf(fp, "%s", lineHeader);		// reads only first word
 		if (strcmp(lineHeader, "v") == 0)	// if vertex
 		{
 			float x, y, z;
@@ -156,12 +151,12 @@ GLuint load_obj(char fname[])
 	}
 	fclose(fp);
 
-	// Reading data is complete, now it needs to be translated to openGL format.
-	// This is done in a display list for increased performance
+	/* Reading data is complete, now it needs to be translated to openGL format.
+	 This is done in a display list for increased performance */
 	GLuint objDisplayList = glGenLists(1);
 	glNewList(objDisplayList, GL_COMPILE);
 
-	// Do some transformations
+	// do some transformations
 	glTranslatef(0.0, -3.5, 0.0);
 	glRotatef(90, 0.0, 1.0, 0.0);
 	glRotatef(15, 0.0, 0.0, 1.0);
@@ -182,6 +177,6 @@ GLuint load_obj(char fname[])
 
 	glEndList();
 
-	// Return reference to display list
+	// return reference to display list
 	return objDisplayList;
 }

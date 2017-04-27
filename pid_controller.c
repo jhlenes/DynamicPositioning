@@ -1,34 +1,40 @@
 /**************************************************
- *
  * FILENAME:	pid_controller.c
  *
  * DESCRIPTION:
- * 			Implementation of a PID-controller.
+ * 		Implementation of a PID-controller.
  *
  * PUBLIC FUNCTIONS:
- * 			PIDdata pid_compute(float input, float setpoint)
+ * 		PIDdata pid_compute(float input, float setpoint)
  *
  * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 21.03.2017
- *
  **************************************************/
 
-#include <stdio.h>
 #include "headers/pid_controller.h"
-#include "headers/responsive_analog_read.h"
 #include "headers/time_utils.h"
 
-// PID coefficients
+// PID coefficients, found by tuning
 #define Kp 0.059
 #define Ki 0.050
-#define Kd 0.035 // 0.059, 0.050, 0.035
+#define Kd 0.035
 
-#define N 10
+#define N 10 // number of derivatives to average
 
-/* Tuning PID-controller
- *  MAX: 94 , MIN: 84 , {0.4, 0.4, 1.8}
- * 	MAX: 107, MIN: 101, {0.15, 0.2, 0.07}, BEST: {0.06, 0.1, 0.09}
- */
-
+/**************************************************
+ * NAME: static float average(float array[])
+ *
+ * DESCRIPTION:
+ * 		Calculates the average value of an array
+ * INPUTS:
+ * 		PARAMETERS:
+ *      	float array[]:	The array to average.
+ *
+ * OUTPUTS:
+ *     	RETURN:
+ *        	float:	The average value of the array
+ *
+ * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 01.04.2017
+ **************************************************/
 static float average(float array[])
 {
 	float sum = 0.0;
@@ -44,8 +50,7 @@ static float average(float array[])
  * NAME: PIDdata pid_compute(float input, float setpoint)
  *
  * DESCRIPTION:
- * 			Applies the PID-regulator control loop algorithm.
- * 			See https://en.wikipedia.org/wiki/PID_controller for more info about PID-controllers.
+ * 		Applies the PID-regulator control loop algorithm.
  *
  * INPUTS:
  * 		PARAMETERS:
@@ -54,31 +59,33 @@ static float average(float array[])
  *
  * OUTPUTS:
  *     	RETURN:
- *        	PIDdata:				The power to be applied in order to regulate the process. In addition,
- *        							every term of the power is also returned
+ *        	PIDdata:	A struct containing the power output required to
+ *        				regulate the system and the PID terms.
  *
  * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 01.04.2017
  **************************************************/
 PIDdata pid_compute(float input, float setpoint)
 {
-	static unsigned long lastTime = 0UL;
-	static float lastInput = 0;
-	static float integralTerm = MAX_OUTPUT;
-	static float dTerms[N];
+	static unsigned long lastTime;
+	static float lastInput;
+	static float integralTerm = MAX_OUTPUT;	// MAX_OUTPUT means no power
+	static float derivativeTerms[N];
 	static int i = 0;
 
-	if (lastTime == 0UL) {
+	if (lastTime == 0UL)
+	{
 		lastTime = nano_time();
 		lastInput = input;
 	}
 
+	// get time passed
 	unsigned long timeNow = nano_time();
-
-	// time difference in seconds
-	float dt = from_nanos(timeNow - lastTime);
+	float dt = nano_to_sec(timeNow - lastTime);
 
 	float error = setpoint - input;
 
+	// calculate the terms
+	float proportionalTerm = Kp * error;
 	integralTerm += Ki * error * dt;
 
 	// ensure value is in bounds
@@ -87,15 +94,13 @@ PIDdata pid_compute(float input, float setpoint)
 	else if (integralTerm < MIN_OUTPUT)
 		integralTerm = MIN_OUTPUT;
 
-	// by using change in input instead of change in error,
-	// we get no output spikes when the set point changes
 	float dInput = (input - lastInput) / dt;
+	derivativeTerms[i++] = -Kd * dInput;
+	if (i >= N)
+		i = 0;
+	float derivativeTerm = average(derivativeTerms);
 
-	float Pterm = Kp * error;
-	dTerms[i++] = -Kd * dInput;
-	if (i >= N) i = 0;
-	float Dterm = average(dTerms);
-	float output = Pterm + integralTerm + Dterm;
+	float output = proportionalTerm + integralTerm + derivativeTerm;
 
 	// ensure output is in bounds
 	if (output > MAX_OUTPUT)
@@ -107,7 +112,7 @@ PIDdata pid_compute(float input, float setpoint)
 	lastInput = input;
 	lastTime = timeNow;
 
-	PIDdata res = { output, Pterm, integralTerm, Dterm };
+	PIDdata res = { output, proportionalTerm, integralTerm, derivativeTerm };
 
 	return res;
 }

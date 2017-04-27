@@ -1,50 +1,49 @@
 /**************************************************
- *
  * FILENAME:	animation.c
  *
  * DESCRIPTION:
- * 			This file contains everything related to graphics. The graphics
- * 			are based on OpenGL. This file also handles keyboard events.
- *
+ * 		This file contains everything related to visualization. The graphics
+ * 		are made in OpenGL. This file also handles keyboard events.
  *
  * PUBLIC FUNCTIONS:
  * 			void *start_animation(void*)
  *
  * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 03.04.2017
- *
  **************************************************/
 
 #include <GL/freeglut.h>
+#include <stdlib.h>
 
 #include "headers/main.h"
 #include "headers/obj_loader.h"
 #include "headers/pid_controller.h"
 
-// Constants for used for drawing
+// constants for used for drawing
 #define WINDOW_WIDTH 10.0
 #define BOAT_WIDTH 3.5
 #define SETLINE_WIDTH 0.02
 #define SETLINE_HEIGHT 1.4
 
 #define KEY_ENTER 13
+
 #define SETPOINT_INCREMENT 3
 
-// Data from the current run
-static BoatData *boatData;
-
-// OpenGL display list ids
-static GLuint speedboat;
-static GLuint setline;
+/* Functions in OpenGL are predefined to a specific format.
+ * External variables are therefore necessary. */
+static BoatData *boatData;	// data from control loop
+static GLuint speedboat;	// display list ID for boat
+static GLuint setline;		// display list ID for setline
 
 /**************************************************
  * NAME: static void drawPowerArrow(void)
  *
  * DESCRIPTION:
- * 			Draws an arrow depicting the power ouput from the boat.
+ * 		Draws an arrow depicting the power output from the boat.
  *
  * INPUTS:
  * 		EXTERNALS:
  * 			BoatData *boatData:		A collection of data for the boat
+ *
  * OUTPUTS:
  * 		none
  *
@@ -52,7 +51,7 @@ static GLuint setline;
  **************************************************/
 static void drawPowerArrow(void)
 {
-	// Calculate position and color of arrow based on the magnitude
+	// calculate position and color of arrow based on the power
 	float arrowX = ((*boatData).servoValue - MAX_OUTPUT) / ( MIN_OUTPUT - MAX_OUTPUT) * 4.0 - 2.0;
 	float arrowColor = 0.9
 			* (1 - ((*boatData).servoValue - MAX_OUTPUT) / (MIN_OUTPUT - MAX_OUTPUT));
@@ -85,8 +84,8 @@ static void drawPowerArrow(void)
  * NAME: static void display(void)
  *
  * DESCRIPTION:
- * 			This function display stuff on the screen. It will run over and over
- * 			handling the graphics.
+ * 		This function is called over and over and is responsible for drawing
+ * 		everything.
  *
  * INPUTS:
  *     	EXTERNALS:
@@ -101,32 +100,32 @@ static void drawPowerArrow(void)
  **************************************************/
 static void display(void)
 {
-	// Convert from our values to window coordinates
+	// convert from our values to window coordinates
 	static const float TO_WINDOW_COORDS = -(WINDOW_WIDTH - BOAT_WIDTH) / TANK_WIDTH;
 
-	// Calculate the updated positions for the boat and setpoint
+	// calculate the updated positions for the boat and setpoint
 	float boatX = ((*boatData).sensorValue - (*boatData).startpoint + TANK_WIDTH / 2.0)
 			* TO_WINDOW_COORDS;
 	float setpointX = ((*boatData).setpoint - (*boatData).startpoint + TANK_WIDTH / 2.0)
 			* TO_WINDOW_COORDS;
 
-	// Clear window and select the modelview matrix
+	// clear window and select the modelview matrix
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glMatrixMode(GL_MODELVIEW);
 
-	// Draw the boat
+	// draw the boat
 	glLoadIdentity();
 	glEnable(GL_LIGHTING);
 	glTranslatef(boatX, 0.0, 0.0);
 	glCallList(speedboat);
 
-	// Draw the setline
+	// draw the setline
 	glLoadIdentity();
 	glDisable(GL_LIGHTING);
-	if (abs((*boatData).setpoint - (*boatData).sensorValue) < 5)// Green line when on the setpoint, else red
-		glColor3f(0.0, 1.0, 0.0);
+	if (abs((*boatData).setpoint - (*boatData).sensorValue) < 5)
+		glColor3f(0.0, 1.0, 0.0);	// green
 	else
-		glColor3f(1.0, 0.0, 0.0);
+		glColor3f(1.0, 0.0, 0.0);	// red
 	glTranslatef(setpointX, 0.0, 0.0);
 	glCallList(setline);
 
@@ -139,8 +138,8 @@ static void display(void)
  * NAME: static void keyboard(unsigned char key, int x, int y)
  *
  * DESCRIPTION:
- * 			This is the keyboard function handed to glut. It handles regular
- * 			keypresses.
+ * 		This is the keyboard function handed to glut. It handles regular
+ * 		keypresses.
  *
  * INPUTS:
  *     	PARAMETERS:
@@ -158,7 +157,7 @@ static void keyboard(unsigned char key, int x, int y)
 	switch (key)
 	{
 	case KEY_ENTER:
-		glutLeaveMainLoop();	// Terminate program
+		glutLeaveMainLoop();	// terminate program, causes close_func() to be run
 		break;
 	}
 }
@@ -167,8 +166,8 @@ static void keyboard(unsigned char key, int x, int y)
  * NAME: static void special_keyboard(int key, int x, int y)
  *
  * DESCRIPTION:
- * 			This is the special keyboard function handed to glut. It handles
- * 			special keypresses, e.g arrow keys, F1, F2...
+ * 		This is the special keyboard function handed to glut. It handles
+ * 		special keypresses, e.g arrow keys, F1, F2...
  *
  * INPUTS:
  *     	PARAMETERS:
@@ -204,12 +203,12 @@ static void special_keyboard(int key, int x, int y)
  * NAME: static void close_func()
  *
  * DESCRIPTION:
- * 			This function will run when the openGL window is closed. It sets
- * 			the main loop condition to false, causing the program to finish.
+ * 		This function will run when the openGL window is closed. It sets
+ * 		the main loop condition to false, causing the program to finish.
  *
  * INPUTS:
  *     	EXTERNALS:
- * 			BoatData *boatData:		A struct containing data from the current run.
+ * 			BoatData *boatData:	A struct containing data from the current run.
  *
  * OUTPUTS:
  * 		none
@@ -225,9 +224,9 @@ static void close_func()
  * NAME: static void setupLighting()
  *
  * DESCRIPTION:
- * 			Sets up the lighting conditions. Standard openGL lighting is Gouraud shading
- * 			which is fast but not the best looking alternative. The functions sets the
- * 			light's position and color, and specifies the material's reflection parameters.
+ * 		Sets up the lighting conditions. Standard openGL lighting is Gouraud shading
+ * 		which is fast but not the best looking alternative. The functions sets the
+ * 		light's position and color, and specifies the material's reflection parameters.
  *
  * INPUTS:
  *     	none
@@ -265,7 +264,7 @@ static void setupLighting()
  * NAME: static void init(void)
  *
  * DESCRIPTION:
- * 			Does some configuring that only needs to be done once before the program starts.
+ * 		Does some configuring that only needs to be done once before the program starts.
  *
  * INPUTS:
  *     	none
@@ -287,10 +286,10 @@ static void init(void)
 
 	setupLighting();
 
-	// Get a display list for the boat
+	// get a display list for the boat
 	speedboat = load_obj("data/boat.obj");
 
-	// Create display list for setline
+	// create display list for setline
 	setline = glGenLists(1);
 	glNewList(setline, GL_COMPILE);
 	glTranslatef(0.0, -3.0, 0.0);
@@ -307,11 +306,13 @@ static void init(void)
  * NAME: void *start_animation(void *void_ptr)
  *
  * DESCRIPTION:
- * 			Starting point for the graphics. Initializes window with parameters,
- * 			sets event handlers for keyboard, sets display function...
+ * 		Starting point for the graphics. Initializes window with parameters,
+ * 		sets event handlers for keyboard and sets display function. This
+ * 		function is started from a new thread, thus the format of the function.
  *
  * INPUTS:
- *     	void *void_ptr:		A pointer to the boat data from the current run
+ *     	void *void_ptr:	A pointer to a 'BoatData' struct containing data
+ *     					from the current run.
  *
  * OUTPUTS:
  * 		none
@@ -322,7 +323,7 @@ void *start_animation(void *void_ptr)
 {
 	boatData = (BoatData*) void_ptr;
 
-	// No input args supported
+	// no input args supported
 	int argc = 0;
 	char *argv[0];
 	glutInit(&argc, argv);
@@ -334,17 +335,17 @@ void *start_animation(void *void_ptr)
 
 	init();
 
-	// Don't exit on window close, some things needs to be done afterwards e.g. plotting
+	// don't exit on window close, some things needs to be done afterwards e.g. plotting
 	glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_GLUTMAINLOOP_RETURNS);
 
-	// Set glut functions
+	// set glut functions
 	glutDisplayFunc(display);
 	glutIdleFunc(display);
 	glutKeyboardFunc(keyboard);
 	glutSpecialFunc(special_keyboard);
 	glutCloseFunc(close_func);
 
-	// Start
+	// start
 	glutMainLoop();
 
 	return NULL;

@@ -1,2 +1,11 @@
 # DynamicPositioning
-Project in TMR4160 at NTNU
+
+To run the program: `make build && make run`
+
+## Libraries needed
+
+- Phidget
+- Freeglut
+
+## Software needed
+- Gnuplot

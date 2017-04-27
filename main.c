@@ -139,11 +139,6 @@ static void *printer_func(void *void_ptr)
  **************************************************/
 int main()
 {
-	//plot("../../DPresults/PID_endret2.dat");
-	//plot("output.dat");
-	test_pid();
-	return 0;
-
 	if (connect_phidgets())
 		return 1;	// could not connect
 

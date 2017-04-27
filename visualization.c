@@ -18,7 +18,7 @@
 #include "headers/obj_loader.h"
 #include "headers/pid_controller.h"
 
-// constants for used for drawing
+// constants used for drawing
 #define WINDOW_WIDTH 10.0
 #define BOAT_WIDTH 3.5
 #define SETLINE_WIDTH 0.02
@@ -31,8 +31,8 @@
 /* Functions in OpenGL are predefined to a specific format.
  * External variables are therefore necessary. */
 static BoatData *boatData;	// data from control loop
-static GLuint speedboat;	// display list ID for boat
-static GLuint setline;		// display list ID for setline
+static GLuint speedboat;  	// display list ID for boat
+static GLuint setline;    	// display list ID for setline
 
 /**************************************************
  * NAME: static void drawPowerArrow(void)
@@ -52,7 +52,8 @@ static GLuint setline;		// display list ID for setline
 static void drawPowerArrow(void)
 {
 	// calculate position and color of arrow based on the power
-	float arrowX = ((*boatData).servoValue - MAX_OUTPUT) / ( MIN_OUTPUT - MAX_OUTPUT) * 4.0 - 2.0;
+	float arrowX = ((*boatData).servoValue - MAX_OUTPUT) / ( MIN_OUTPUT - MAX_OUTPUT)
+			* 4.0 - 2.0;
 	float arrowColor = 0.9
 			* (1 - ((*boatData).servoValue - MAX_OUTPUT) / (MIN_OUTPUT - MAX_OUTPUT));
 
@@ -144,8 +145,8 @@ static void display(void)
  * INPUTS:
  *     	PARAMETERS:
  *     		unsigned char key:	Value of the key pressed
- *     		int x:				Mouse pointer position.
- *     		int y:				Mouse pointer position.
+ *     		int x:            	Mouse pointer position.
+ *     		int y:            	Mouse pointer position.
  *
  * OUTPUTS:
  * 		none
@@ -203,12 +204,12 @@ static void special_keyboard(int key, int x, int y)
  * NAME: static void close_func()
  *
  * DESCRIPTION:
- * 		This function will run when the openGL window is closed. It sets
+ *		This function will run when the openGL window is closed. It sets
  * 		the main loop condition to false, causing the program to finish.
  *
  * INPUTS:
- *     	EXTERNALS:
- * 			BoatData *boatData:	A struct containing data from the current run.
+ *		EXTERNALS:
+ *			BoatData *boatData:	A struct containing data from the current run.
  *
  * OUTPUTS:
  * 		none
@@ -229,10 +230,10 @@ static void close_func()
  * 		light's position and color, and specifies the material's reflection parameters.
  *
  * INPUTS:
- *     	none
+ *		none
  *
  * OUTPUTS:
- * 		none
+ *		none
  *
  * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 20.03.2017
  **************************************************/
@@ -306,16 +307,16 @@ static void init(void)
  * NAME: void *start_animation(void *void_ptr)
  *
  * DESCRIPTION:
- * 		Starting point for the graphics. Initializes window with parameters,
+ *		Starting point for the graphics. Initializes window with parameters,
  * 		sets event handlers for keyboard and sets display function. This
  * 		function is started from a new thread, thus the format of the function.
  *
  * INPUTS:
- *     	void *void_ptr:	A pointer to a 'BoatData' struct containing data
- *     					from the current run.
+ *		void *void_ptr:	A pointer to a 'BoatData' struct containing data
+ *                     	from the current run.
  *
  * OUTPUTS:
- * 		none
+ *		none
  *
  * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 20.03.2017
  **************************************************/

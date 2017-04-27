@@ -27,12 +27,12 @@ static const float SMOOTHNESS_MULTIPLIER = 0.02;
  * 		require less smothing, i.e. they need to be responsive.
  *
  * INPUTS:
- * 		PARAMETERS:
- *      	float diff:	The difference in last two sensor values.
+ *		PARAMETERS:
+ *			float diff:	The difference in last two sensor values.
  *
  * OUTPUTS:
- *     	RETURN:
- *        	float:	A smoothness factor in the range 0 to 1.
+ *		RETURN:
+ *			float:	A smoothness factor in the range 0 to 1.
  *
  * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 20.03.2017
  **************************************************/
@@ -53,16 +53,16 @@ static float smoothness_curve(float diff)
  * 		return the smoothed out value.
  *
  * INPUTS:
- * 		PARAMETERS:
- *      	float newValue:	The new value which will be smoothed.
+ *		PARAMETERS:
+ *			float newValue:	The new value which will be smoothed.
  *
  * OUTPUTS:
- *     	RETURN:
- *        	int:	The smoothed value.
+ *		RETURN:
+ *			int:	The smoothed value.
  *
  * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 20.03.2017
  **************************************************/
-float responsive_analog_read(float newValue)
+int responsive_analog_read(float newValue)
 {
 	static float smoothValue = 0.0;
 
@@ -75,13 +75,10 @@ float responsive_analog_read(float newValue)
 
 	// ensure output is in bounds
 	if (smoothValue < 0.0)
-	{
 		smoothValue = 0.0;
-	} else if (smoothValue > ANALOG_RESOLUTION - 1)
-	{
+	else if (smoothValue > ANALOG_RESOLUTION - 1)
 		smoothValue = ANALOG_RESOLUTION - 1;
-	}
 
-	return smoothValue;
+	return (int) smoothValue;
 }
 

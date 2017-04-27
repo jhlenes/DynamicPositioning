@@ -29,8 +29,8 @@
  *      	char fname[]:	The file name to extract the data from.
  *
  * OUTPUTS:
- *     	RETURNS:
- *        	GLuint:	A reference to a openGL display list containing the model from the .obj file.
+ *		RETURNS:
+ *			GLuint:	A reference to a openGL display list containing the model from the .obj file.
  *
  * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 20.03.2017
  **************************************************/

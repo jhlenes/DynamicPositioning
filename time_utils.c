@@ -19,15 +19,15 @@
  * NAME: float nano_to_sec(unsigned long nanos)
  *
  * DESCRIPTION:
- * 		Converts from nanoseconds to seconds.
+ *		Converts from nanoseconds to seconds.
  *
  * INPUTS:
- * 		PARAMETERS:
- * 			unsigned long nanos:	The time in nanoseconds.
+ *		PARAMETERS:
+ *			unsigned long nanos:	The time in nanoseconds.
  *
  * OUTPUTS:
- *     	RETURN:
- *        	float:	The time in seconds.
+ *		RETURN:
+ *			float:	The time in seconds.
  *
  * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 20.03.2017
  **************************************************/
@@ -41,15 +41,15 @@ float nano_to_sec(unsigned long nanos)
  * NAME: unsigned long sec_to_nano(float secs)
  *
  * DESCRIPTION:
- * 		Converts from seconds to nanoseconds.
+ *		Converts from seconds to nanoseconds.
  *
  * INPUTS:
- * 		PARAMETERS:
- * 			float secs:		The time in seconds.
+ *		PARAMETERS:
+ *			float secs:		The time in seconds.
  *
  * OUTPUTS:
- *     	RETURN:
- *        	unsigned long:	The time in nanoseconds.
+ *		RETURN:
+ *			unsigned long:	The time in nanoseconds.
  *
  * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 20.03.2017
  **************************************************/
@@ -63,14 +63,14 @@ unsigned long sec_to_nano(float secs)
  * NAME: unsigned long nano_time(void)
  *
  * DESCRIPTION:
- * 		Returns the current time in nanoseconds.
+ *		Returns the current time in nanoseconds.
  *
  * INPUTS:
- * 		none
+ *		none
  *
  * OUTPUTS:
- *     	RETURN:
- *        	unsigned long:	The current time in nanoseconds.
+ *		RETURN:
+ *			unsigned long:	The current time in nanoseconds.
  *
  * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 20.03.2017
  **************************************************/

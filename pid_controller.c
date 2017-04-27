@@ -25,6 +25,7 @@
  *
  * DESCRIPTION:
  * 		Calculates the average value of an array
+ *
  * INPUTS:
  * 		PARAMETERS:
  *      	float array[]:	The array to average.
@@ -54,13 +55,13 @@ static float average(float array[])
  *
  * INPUTS:
  * 		PARAMETERS:
- *      	float input:			The input value to regulate.
- *      	float setpoint:			The setpoint to follow.
+ *      	float input:   	The input value to regulate.
+ *      	float setpoint:	The setpoint to follow.
  *
  * OUTPUTS:
  *     	RETURN:
  *        	PIDdata:	A struct containing the power output required to
- *        				regulate the system and the PID terms.
+ *                  	regulate the system and the PID terms.
  *
  * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 01.04.2017
  **************************************************/
@@ -94,10 +95,10 @@ PIDdata pid_compute(float input, float setpoint)
 	else if (integralTerm < MIN_OUTPUT)
 		integralTerm = MIN_OUTPUT;
 
+	// get average value for derivative term
 	float dInput = (input - lastInput) / dt;
 	derivativeTerms[i++] = -Kd * dInput;
-	if (i >= N)
-		i = 0;
+	if (i >= N) i = 0;
 	float derivativeTerm = average(derivativeTerms);
 
 	float output = proportionalTerm + integralTerm + derivativeTerm;

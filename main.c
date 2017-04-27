@@ -3,9 +3,10 @@
  *
  * DESCRIPTION:
  *		This is the entry point for the dynamic positioning program. This file
- * 		combines everything. The program runs in a loop, reading sensor data and updating
- * 		the servo motor to counter unwanted changes. It also handles printing values
- * 		to the screen and starts up a new thread which visualizes the boat and handles input.
+ * 		combines everything. The program runs in a loop, reading sensor data and
+ * 		updating the servo motor to counter unwanted changes. It also handles
+ * 		printing values to the screen and starts up a new thread which visualizes
+ * 		the boat and handles input.
  *
  * AUTHOR: Jan Henrik Lenes		LAST CHANGE: 21.03.2017
  **************************************************/
@@ -55,8 +56,8 @@ static void plot(char *filename)
 	// plot power output, position and setpoint
 	fprintf(gnuplot, "plot \"%s\" u 1:3 w lines t \"power\" linetype 2 axes x1y2, "
 			"\"%s\" u 1:2 w lines t \"position\" linetype 1, "
-			"\"%s\" u 1:4 w lines t \"setpoint\" linetype 1 dashtype 2 \n", filename, filename,
-			filename);
+			"\"%s\" u 1:4 w lines t \"setpoint\" linetype 1 dashtype 2 \n",
+			filename, filename, filename);
 	pclose(gnuplot);
 
 	// open new pipe to gnuplot
@@ -96,9 +97,9 @@ static void *printer_func(void *void_ptr)
 	FILE *fp = fopen("output.dat", "w");
 
 	// create file header
-	fprintf(fp, "# This file contains the data from running the dynamic positioning program.\n"
-			"#\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\n", "time[s]", "sensor", "output", "setpoint",
-			"P-term", "I-term", "D-term");
+	fprintf(fp, "# Data gathered from running the dynamic positioning program.\n"
+			"#\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\n", "time[s]", "sensor", "output",
+			"setpoint", "P-term", "I-term", "D-term");
 
 	// continue to print to screen and write to file as long as the program is running
 	while ((*data).programRunning)
@@ -106,12 +107,12 @@ static void *printer_func(void *void_ptr)
 		nanosleep(&PRINT_DELAY, NULL);
 
 		// print to screen
-		printf("setpoint: %5.1f sensorValue: %5.1f servoValue: %5.1f\n", 1000.0 - (*data).setpoint,
-				1000.0 - (*data).sensorValue, (*data).servoValue);
+		printf("setpoint: %5.1f sensorValue: %5.1f servoValue: %5.1f\n",
+				1000.0 - (*data).setpoint, 1000.0 - (*data).sensorValue, (*data).servoValue);
 
 		// write to file
-		fprintf(fp, " \t%8.3f\t%8.3f\t%8.3f\t%8.3f\t%8.3f\t%8.3f\t%8.3f\n", (*data).timePassed,
-				1000.0 - (*data).sensorValue,
+		fprintf(fp, " \t%8.3f\t%8.3f\t%8.3f\t%8.3f\t%8.3f\t%8.3f\t%8.3f\n",
+				(*data).timePassed, 1000.0 - (*data).sensorValue,
 				MAX_OUTPUT - (*data).servoValue, 1000.0 - (*data).setpoint, -(*data).pid.Pterm,
 				MAX_OUTPUT - (*data).pid.Iterm, -(*data).pid.Dterm);
 	}
@@ -142,7 +143,8 @@ int main()
 	if (connect_phidgets())
 		return 1;	// could not connect
 
-	BoatData boatData = { .programRunning = true };	// omitted fields are initialized to default values
+	// omitted fields are initialized to default values
+	BoatData boatData = { .programRunning = true };
 
 	// start thread for visualization
 	pthread_t visualizationThread;
@@ -166,10 +168,10 @@ int main()
 		// read position
 		float sensorValue = get_sensor_value();
 
-		// calculate new servo position
+		// calculate new servo value
 		PIDdata pid = pid_compute(sensorValue, boatData.setpoint);
 
-		// set the new servo position
+		// set the new servo value
 		set_servo_position((double) pid.output);
 
 		float timePassed = nano_to_sec(nano_time() - startTime);
@@ -182,7 +184,7 @@ int main()
 	}
 
 	set_servo_position(0.0);	// turn off motor
-	close_connections();		// close phidget connections
+	close_connections();    	// close phidget connections
 
 	// join threads
 	pthread_join(visualizationThread, NULL);

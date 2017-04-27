@@ -38,11 +38,12 @@ static CPhidgetServoHandle servoHandle;
  * INPUTS:
  * 		EXTERNALS:
  *      	CPhidgetInterfaceKitHandle kitHandle:	An empty handle which will be attached
- *      											to a device.
+ *                                               	to a device.
  *
  * OUTPUTS:
  *      EXTERNALS:
  *      	CPhidgetInterfaceKitHandle kitHandle:	A handle with a registered phidget.
+ *
  *     	RETURNS:
  *        	int:	0 if successful, 1 if failure.
  *
@@ -80,11 +81,12 @@ static int setup_interface_kit_connection(void)
  * INPUTS:
  *     	EXTERNALS:
  *      	CPhidgetServoHandle servoHandle:	An empty handle which will be attached
- *      										to a device.
+ *                                          	to a device.
  *
  * OUTPUTS:
  *      EXTERNALS:
  *      	CPhidgetServoHandle kitHandle:		A handle with a registered phidget.
+ *
  *     	RETURNS:
  *        	int:	0 if successful, 1 if failure.
  *
@@ -116,7 +118,7 @@ static int setup_servo_motor_connection(void)
  *
  * DESCRIPTION:
  * 		Connects to both the interface kit and servo by calling the private
- * 		function setup_interface_kit_connection and setup_servo_motor_connection.
+ * 		functions setup_interface_kit_connection() and setup_servo_motor_connection().
  *
  * INPUTS:
  * 		none
@@ -147,7 +149,6 @@ int connect_phidgets(void)
  * 		EXTERNALS:
  *     		CPhidgetInterfaceKitHandle kitHandle:	A handle with a registered interface kit.
  *
- *
  * OUTPUTS:
  *     	RETURN:
  *        	int:	The sensor value (0-1000).
@@ -170,10 +171,10 @@ int get_sensor_value(void)
  * 		Sets the position of the servo motor.
  *
  * INPUTS:
- * 		PARAMETERS:
- * 			double position:	The new servo motor position.
- *     	EXTERNALS:
- *     		CPhidgetServoHandle servoHandle:	A handle with a registered servo motor.
+ *		PARAMETERS:
+ *			double position:	The new servo motor position.
+ *		EXTERNALS:
+ *			CPhidgetServoHandle servoHandle:	A handle with a registered servo motor.
  *
  * OUTPUTS:
  * 		none
@@ -190,11 +191,11 @@ void set_servo_position(double position)
  * NAME: void close_connections(void)
  *
  * DESCRIPTION:
- * 		Closes the connection to the phidgets.
+ *		Closes the connection to the phidgets.
  *
  * INPUTS:
  *     	EXTERNALS:
- *     		CPhidgetServoHandle servoHandle:		A handle with a registered servo motor.
+ *     		CPhidgetServoHandle servoHandle:     	A handle with a registered servo motor.
  *     		CPhidgetInterfaceKitHandle kitHandle:	A handle with a registered interface kit.
  *
  * OUTPUTS:
